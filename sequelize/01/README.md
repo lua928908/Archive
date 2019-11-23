@@ -134,7 +134,7 @@ module.exports = (sequelize, DataTypes) => {
 }
 ```
 
-####해쉬태그  -  back/models/hashtag.js
+#### 해쉬태그 - back/models/hashtag.js
 ```
 module.exports = (sequelize, DataTypes) => {
     const Hashtag = sequelize.define('Hashtag', {
@@ -161,9 +161,7 @@ module.exports = (sequelize, DataTypes) => {
 
 위에 코드를 사용해 음수를 받지 않을 수 있다.
 
-
-https://sequelize.org/v5/manual/data-types.html
-위에 링크 공식문서에서 데이터타입을 확인 할 수 있다.
+[여기]("https://sequelize.org/v5/manual/data-types.html")를 누르면 공식문서의 데이터타입을 확인 할 수 있다.
 
 ```
 sequelize db:create
