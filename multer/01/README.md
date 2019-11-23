@@ -96,10 +96,3 @@ node backend 에서는 req.file 혹은 eq.files를 통해서 사용자가 업로
 | `files` | multipart 형식 폼에서 파일 필드의 최대 개수 | 무제한 |
 | `parts` | for multipart forms, the max number of parts (fields + files) | 무제한 |
 | `headerPairs` | multipart 형식 폼에서 파싱할 헤더의 key=>value 쌍의 최대 개수 | 2000 |
-
-| `mimetype` | 파일의 Mime 타입 |  |
-| `size` | 파일의 바이트(byte) 사이즈 |  |
-| `destination` | 파일이 저장된 폴더 | DiskStorage |
-| `filename` | destination 에 저장된 파일 명 | DiskStorage |
-| `path` | 업로드된 파일의 전체 경로 | DiskStorage |
-| `buffer` | 전체 파일의 Buffer | MemoryStorage |
