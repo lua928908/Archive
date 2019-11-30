@@ -10,3 +10,7 @@
     - [passport - 로그인 관리](https://github.com/lua928908/Archive/tree/master/passport/01)
     - [sequelize - javascript ORM](https://github.com/lua928908/Archive/tree/master/sequelize/01)
     - [multer - 파일 업로드](https://github.com/lua928908/Archive/tree/master/multer/01)
+  
+
+3. 인공지능(AI)
+    - [Tim Urban - The AI Revolution]((https://github.com/lua928908/Archive/tree/master/Tim_Urban____The_AI_Revolution/01))
