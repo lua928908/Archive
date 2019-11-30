@@ -13,4 +13,4 @@
   
 
 3. 인공지능(AI)
-    - [Tim Urban - The AI Revolution]((https://github.com/lua928908/Archive/tree/master/Tim_Urban____The_AI_Revolution/01))
+    - [Tim Urban - The AI Revolution](https://github.com/lua928908/Archive/tree/master/Tim_Urban____The_AI_Revolution/01)

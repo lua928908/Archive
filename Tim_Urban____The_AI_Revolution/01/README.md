@@ -3,9 +3,11 @@
 **이 글은 Tim Urban 의 The AI Revolution를 번역하신 coolspeed님의 글을 요약한 글입니다.**
 
 저자: Tim Urban
+
 원문링크:
-Part I: [The AI Revolution: The Road to Superintelligence](https://waitbutwhy.com/2015/01/artificial-intelligence-revolution-1.html)
-Part II: [The AI Revolution: Our Immortality or Extinction](https://waitbutwhy.com/2015/01/artificial-intelligence-revolution-2.html)
+* Part I: [The AI Revolution: The Road to Superintelligence](https://waitbutwhy.com/2015/01/artificial-intelligence-revolution-1.html)
+* Part II: [The AI Revolution: Our Immortality or Extinction](https://waitbutwhy.com/2015/01/artificial-intelligence-revolution-2.html)
+
 번역: [coolspeed](https://coolspeed.wordpress.com/2016/01/03/the_ai_revolution_1_korean/)
 
 <br>
