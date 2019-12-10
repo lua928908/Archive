@@ -3,7 +3,7 @@
 공부한 내용을 아카이브하기 위해 작성하였습니다.
 
 1. JAVA
-    - 준비중입니다.
+    - [자바의 기초 - 자바스크립트 개발자가 배워본 자바의 특징](https://github.com/lua928908/Archive/tree/master/java_basics/01)
  
   
 2. JAVASCRIPT
