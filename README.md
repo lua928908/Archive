@@ -14,3 +14,7 @@
 
 3. 인공지능(AI)
     - [Tim Urban - The AI Revolution](https://github.com/lua928908/Archive/tree/master/Tim_Urban____The_AI_Revolution/01)
+    
+    
+4. ETC
+    - [Spring Boot 환경에서 EC2 접속 및 필수 환경설정 하기](https://github.com/lua928908/Archive/tree/master/etc/01)
