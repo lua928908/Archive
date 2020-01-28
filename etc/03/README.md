@@ -1,9 +1,9 @@
 # 인텔리제이 사용법
 ## 포스트 작성시 환경
 
-OS : Window 10
-IntelliJ Version : 2019.3.1
-Condition : 배부름
+OS : Window 10 <br>
+IntelliJ Version : 2019.3.1 <br>
+Condition : 배부름 <br>
 
 <br>
 
@@ -37,3 +37,38 @@ Condition : 배부름
 필자는 1~2년 전만해도 여러 에디터를 자주 갈아타고 단축키를 변경하거나 테마를 변경하는등 나에게 적절한 환경을 만들고자 노력했지만
 튜닝의 끝은 순정이라 했던가? 최대한 IDEA를 기본설정 그대로 사용하려고 하는 편이다.
 
+<br>
+
+## 자주 사용하는 단축키
+
+| 단축키 | 액션 이름 | 기능 |
+| :------ | --- | --- |
+| `ctrl + r` | Replace | 바꾸기 |
+| `ctrl + shift + r` | Replace in Path | 프로젝트 내 바꾸기 |
+| `shift 2회` | Search Everywhere | 무엇이든 검색 가능(파일명,액션,IDE옵션 등) |
+| `alt + 1` | Project | 프로젝트 툴로 포커스 이동 |
+| `alt + insert` | New... | 파일추가(현재위치 혹은 포커스된 프로젝트툴에서 생성) |
+| `ctrl + j` | Insert Live Template  | 약어를 통한 코드확장 예) java 에서 sout 으로 println 사용 가능 |
+| `ctrl + alt + s` | Settings...  | 프로젝트 세팅 옵션 |
+
+<br>
+
+## Postifix Completion
+
+함수 내에서 arg1>arg2.if 라는 수식을 만들고 tab을 누르면
+```
+if(arg1 > arg2){
+    // code
+}
+``` 
+이런 형태의 수식이 만들어진다. 이런게 있는지 몰랐는데 사용하면 나름 편리할것 같다.
+
+| postfix | 사용방법 |
+| ------ | --- |
+| `수식.log` | 식을 console.log로 출력 |
+| `수식.var` | 식을 변수에 대입 |
+| `수식.if` | 식을 조건문으로 한 if 문을 구성 |
+| `수식.not` | 식의 조건을 반전 |
+
+
+이외 다른 Postfix Completion은 Preferences 다이얼로그의 Editor -> General -> Postfix Completion 에서 확인할 수 있다.
