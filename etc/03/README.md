@@ -50,6 +50,8 @@ Condition : 배부름 <br>
 | `alt + insert` | New... | 파일추가(현재위치 혹은 포커스된 프로젝트툴에서 생성) |
 | `ctrl + j` | Insert Live Template  | 약어를 통한 코드확장 예) java 에서 sout 으로 println 사용 가능 |
 | `ctrl + alt + s` | Settings...  | 프로젝트 세팅 옵션 |
+| `ctrl + alt + l` | code format action  | 코드 줄맞춤 |
+| `shift + f6` | Rename  | 리네임 리팩토링 |
 
 <br>
 
@@ -60,7 +62,7 @@ Condition : 배부름 <br>
 if(arg1 > arg2){
     // code
 }
-``` 
+```
 이런 형태의 수식이 만들어진다. 이런게 있는지 몰랐는데 사용하면 나름 편리할것 같다.
 
 | postfix | 사용방법 |
@@ -72,3 +74,28 @@ if(arg1 > arg2){
 
 
 이외 다른 Postfix Completion은 Preferences 다이얼로그의 Editor -> General -> Postfix Completion 에서 확인할 수 있다.
+
+<br>
+
+## 브레이크 포인트 사용하기
+
+프로그램의 특정행에서 `Ctrl + F8`을 누르거나 크도의 왼쪽 영역을 클릭하면 빨간색 원이 표시되고 디버깅 실행 시 일시 정지하는 브레이크 포인트를 설정할 수 있다.
+마치 자바스크립트에서 `debugger;` 를 통해 특정 코드에서 실행이 멈추게 하는 역할과 비슷하다. 나는 처음엔 이렇게 빨갛게 표시하는 부분이 그냥 눈으로 볼때 코드의 영역을 구분하기 편하라고 만들어져 있는 것인줄 알았다
+
+
+#### 디버그 실행제어
+브레이크 포인트로 정지후에 다음 버튼이나 단축키를 사용해 실행 상태를 제어할 수 있다.
+
+* 재실행: 일시 정지 상태를 해제하고 다음 브레이크 포인트 까지 실행을 계속한다.
+* 스텝 오버: 현재 행을 실행한 후 다음 줄을 실행하기 전에 다시 일시 중지한다.
+* 스텝 인투: 정지 행에 메소드 호출이 있으면 메소드를 호출한 곳에 들어가 다시 일시 중지한다. 호출 메소드가 Preferences 다이얼로그의 Build, Execution, Deployment -> Debugger -> Stepping으로 지정돼 있다면 들어가지 않고 스텝오버 한다.
+기본적으로 표준 라이브러리, 클래스로더, 합성 메소드는 건너뛰도록 설정되어있다. 자세한 동작을 활인할 필요가 없는 경우에는 shift를 두번눌러 액션을 `Search Everywhere`를 실행하고 
+
+![stepping 설정 모습](./images/stepping_setting.png)
+
+#### 브레이크 조건
+브레이크 포인트에 마우스 우클릭을 하면 'Condition'이라는 항목에 브레이크 조건을 지정할 숫 있다. 예를들어 반복문 안에서 i=50이라고 적어주면
+반복문이 실행될때 i 값이 50인 상황에서 break point가 걸리게 된다. 또한 more를 누르면 Breakpoints 다이얼로그가 나타나며 상세한 동작을 지정할 수 있다.
+단축키로는 `ctrl + shift + f8`을 눌러 Breakpoints 다이얼로그를 확인할 수 있다.
+
+![breakpoints 설정 모습](./images/Breakpoints_setting.png)
