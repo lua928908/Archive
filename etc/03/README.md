@@ -13,7 +13,7 @@ Condition : 배부름 <br>
 한국에서는 2017년 정도부터 주목을 받았지만 인텔리제이 IDEA는 2001년에 최초 버전이 출시됐으며 훌륭한 리팩토링 기능과 코드 자동 완성기능으로 유명하다 오랜 역사만큼 고급기능이
 많아져 초심자에게 친화적이지는 않다. 커뮤니티에디션을 오픈소스로 공개했고 커뮤니티 에디션과 얼티밋 에디션 버전으로 나누어진다.
 
-모든 파생 IDE의 기반은 얼티밋 에디션이지만 얼티밋 에디션에 포함되지 않은 기능을 가진IDE도 존재한다.
+모든 파생 IDE의 기반은 얼-티밋 에디션이지만 얼티밋 에디션에 포함되지 않은 기능을 가진IDE도 존재한다.
 
 ![인텔리제이 제품군](./images/KakaoTalk_20200124_210856466.jpg)
 
@@ -40,7 +40,7 @@ Condition : 배부름 <br>
 <br>
 
 ## 자주 사용하는 단축키
-
+--------
 | 단축키 | 액션 이름 | 기능 |
 | :------ | --- | --- |
 | `ctrl + r` | Replace | 바꾸기 |
@@ -48,10 +48,18 @@ Condition : 배부름 <br>
 | `shift 2회` | Search Everywhere | 무엇이든 검색 가능(파일명,액션,IDE옵션 등) |
 | `alt + 1` | Project | 프로젝트 툴로 포커스 이동 |
 | `alt + insert` | New... | 파일추가(현재위치 혹은 포커스된 프로젝트툴에서 생성) |
-| `ctrl + j` | Insert Live Template  | 약어를 통한 코드확장 예) java 에서 sout 으로 println 사용 가능 |
-| `ctrl + alt + s` | Settings...  | 프로젝트 세팅 옵션 |
+| `ctrl + j` | Insert Live Template | 약어를 통한 코드확장 예) java 에서 sout 으로 println 사용 가능 |
+| `ctrl + alt + s` | Settings... | 프로젝트 세팅 옵션 |
 | `ctrl + alt + l` | code format action  | 코드 줄맞춤 |
-| `shift + f6` | Rename  | 리네임 리팩토링 |
+| `shift + f6` | Rename | 리네임 리팩토링 |
+| `ctrl + shift + f8` | View Breakpoints  | Breakpoints 다이얼로그 |
+| `f7` | Step Into | 스텝 인투 |
+| `f8` | Step Over | 스텝 오버 |
+| `f9` | Resume Program  | 재실행 |
+| `alt + f8` | Evaluate Expression  | 계산식 평가 |
+| `ctrl + tab` | Switcher | 닫은 파일 열기 |
+| `ctrl + e` | Recent Files | 최근 사용한 파일 목록 |
+| `ctrl + shift + back space` | Last Edit location | 마지막 편집 위치로 커서 이동 |
 
 <br>
 
@@ -65,7 +73,7 @@ if(arg1 > arg2){
 ```
 이런 형태의 수식이 만들어진다. 이런게 있는지 몰랐는데 사용하면 나름 편리할것 같다.
 
-| postfix | 사용방법 |
+| postfix | 사용방법 |-
 | ------ | --- |
 | `수식.log` | 식을 console.log로 출력 |
 | `수식.var` | 식을 변수에 대입 |
