@@ -73,7 +73,7 @@ if(arg1 > arg2){
 ```
 이런 형태의 수식이 만들어진다. 이런게 있는지 몰랐는데 사용하면 나름 편리할것 같다.
 
-| postfix | 사용방법 |-
+| postfix | 사용방법 |
 | ------ | --- |
 | `수식.log` | 식을 console.log로 출력 |
 | `수식.var` | 식을 변수에 대입 |
@@ -107,3 +107,26 @@ if(arg1 > arg2){
 단축키로는 `ctrl + shift + f8`을 눌러 Breakpoints 다이얼로그를 확인할 수 있다.
 
 ![breakpoints 설정 모습](./images/Breakpoints_setting.png)
+
+
+## 데이터베이스 접속
+
+젯브레인의 유료 IDE에서는 Database라는 패널을 통해 DB 접속이 가능하다. 인텔리제이는 자바로 만들어져 DB 접속시 JDBC를 사용한다. JDBC는 자바로 데이터베이스에 접속하는
+표준사양으로 대부분의 데이터베이스가 JDBC 드라이버를 제공한다. 화면 오른쪽에 Database 툴 윈도우에서 DB에 접속하고 +New에 있는 Data Source에서 접속하고자 하는
+데이터베이스 종류를 선택한뒤 Data Source and Drivers 다이얼로그에서 데이터베이스 접속정보를 입력하면 된다.
+
+![DB 접속정보 설정 모습](./images/databases_setting.png)
+
+위 사진처럼 설정정보를 입력하고 Test Connection을 눌러 접속이 되는지 확인해보자. 필자의 경우 서버타임존을 설정하라는 에러가 회사 맥북과 집 window PC 에서도
+발생하는데 Advanced 라는 탭을눌러 serverTimeZone 값에 Asia/Seoul을 입력해주면 접속이 가능해진다.
+
+처음에 접속정보를 설정하려할때 밑에부분에 Download missing driver files 라는 메세지가 경고표시와 함께 노출되면 메세지를 클릭해 JDBC 드라이버를 설치해주면 된다.
+
+<br>
+
+#### 아이콘 툴바
+
+![DB 아이콘 툴바 이미지](./images/db_icon_image.jpg)
+
+참고로 오늘 젯브레인의 또다른 제품, Data Grip을 처음 사용해보았는데 인텔리제이의 Database와 굉장히 흡사하다는 느낌을 받아
+신기하다. 둘다 비슷한 기능과 UI를 가지고 있는것 같다.
