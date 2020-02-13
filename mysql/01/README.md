@@ -50,6 +50,7 @@ select * from `student` limit 1,2;
 select * from `student` where gender="남자" limit 2;
 ```
 
+
 ## Index - 색인
 
 책에보면 색인이라고 해서 가,나,다,라 혹은 ㄱ,ㄴ,ㄷ,ㄹ 와 같이 단어별로 배열이 되어있어 몇페이지에 어떤정보가 있는지
@@ -124,3 +125,112 @@ select * from student where department='국문과'
 select * from student where department='국문과' AND address='제주';
 ```
 
+<br>
+
+## JOIN - 여러 table 사용하기
+
+서비스가 커지고 데이터 규모가 커지면, 하나의 테이블로 정보를 수용하기 어렵기 때문에 여러개의 table을 합쳐서 필요한 데이터로 사용한다.
+
+
+```
+DROP TABLE IF EXISTS `student`;
+CREATE TABLE `student` (
+  `id` tinyint(4) NOT NULL,
+  `name` char(4) NOT NULL,
+  `sex` enum('남자','여자') NOT NULL,
+  `address` varchar(50) NOT NULL,
+  `distance` INT NOT NULL,
+  `birthday` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+   
+INSERT INTO `student` VALUES (2, '박재숙', '남자', '서울',  10, '1985-10-26 00:00:00');
+INSERT INTO `student` VALUES (1, '이숙경', '여자', '청주', 200, '1982-11-16 00:00:00');
+INSERT INTO `student` VALUES (3, '백태호', '남자', '경주', 350, '1989-2-10 00:00:00');
+INSERT INTO `student` VALUES (4, '김경훈', '남자', '제천', 190, '1979-11-4 00:00:00');
+INSERT INTO `student` VALUES (8, '김정인', '남자', '제주', 400, '1990-10-1 00:00:00');
+INSERT INTO `student` VALUES (6, '김경진', '여자', '제주', 400, '1985-1-1 00:00:00');
+INSERT INTO `student` VALUES (7, '박경호', '남자', '영동', 310, '1981-2-3 00:00:00');
+```
+
+위와 같이 data를 만들고 실습을 진행해본다.
+
+`select * from student`를 통해 데이터를 조회하면 `김정인,제주,400` 이라는 값과 `김경진,제주,400` 이라는 값이 존재한다.
+그런데 만약 제주도의 거리가 알고보니 400이 아니라 500이라면 김정인의 제주400과 김경진의 제주400을 모두 바꾸어 주저야한다. 지금은 값이 적어
+어렵지 않지만 만약 table의 data가 100만개라면 나중에 데이터가 변경될 때 관리가 쉽지않고 값을 불러오는 과정에서도 같이 값이 여러번 저장되는 비효율이
+발생한다. 그래서 student라는 table과 location이라는 table을 따로 만들어 관리고 join을 통해 student와 location이 합쳐진 table을 얻을 수 있다.
+
+
+```
+DROP TABLE IF EXISTS `student`;
+CREATE TABLE `student` (
+  `id` tinyint(4) NOT NULL,
+  `name` char(4) NOT NULL,
+  `sex` enum('남자','여자') NOT NULL,
+  `location_id` tinyint(4) NOT NULL,
+  `birthday` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ 
+DROP TABLE IF EXISTS `location`;
+CREATE TABLE `location` (
+`id`  tinyint UNSIGNED NOT NULL AUTO_INCREMENT ,
+`name`  varchar(20) NOT NULL ,
+`distance`  tinyint UNSIGNED NOT NULL ,
+PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
+table을 `student` 와 `location` 으로 쪼개서 만들었따.
+`desc student;` 혹은 `desc location;`을 통해 table이 어떻게 정의 되었는가 확인할 수 있다.
+
+```
+INSERT INTO `location` VALUES (1, '서울', 10);
+INSERT INTO `location` VALUES (2, '청주', 200);
+INSERT INTO `location` VALUES (3, '경주', 255);
+INSERT INTO `location` VALUES (4, '제천', 190);
+INSERT INTO `location` VALUES (5, '대전', 200);
+INSERT INTO `location` VALUES (6, '제주', 255);
+INSERT INTO `location` VALUES (7, '영동', 255);
+INSERT INTO `location` VALUES (8, '광주', 255);
+
+INSERT INTO `student` VALUES (1, '이숙경', '여자', 1, '1982-11-16 00:00:00');
+INSERT INTO `student` VALUES (2, '박재숙', '남자', 2, '1985-10-26 00:00:00');
+INSERT INTO `student` VALUES (3, '백태호', '남자', 3, '1989-2-10 00:00:00');
+INSERT INTO `student` VALUES (4, '김경훈', '남자', 4, '1979-11-4 00:00:00');
+INSERT INTO `student` VALUES (6, '김경진', '여자', 5, '1985-1-1 00:00:00');
+INSERT INTO `student` VALUES (7, '박경호', '남자', 6, '1981-2-3 00:00:00');
+INSERT INTO `student` VALUES (8, '김정인', '남자', 5, '1990-10-1 00:00:00');
+```
+
+예제를 위한 더미 값을 넣어준다.
+
+그럼 가장 중요한 `location_id` 컬럼을 `location` 테이블에서 어떻게 가져올 수 있을까?
+
+<br>
+
+#### join의 종류
+
+![SQL JOIN 이미지](../images/Visual_SQL_JOINS_V2.png)
+
+<br>
+
+* OUTTER JOIN : 매칭되는 행이 없어도 결과를 가져오고 매칭되는 행이 없다면 NULL로 표시한다.
+    1. LEFT JOIN : 가장 많이 사용되는 join의 형태이다, 왼쪽 테이블을 중심으로 오른쪽의 테이블을 매치시켜 왼쪽은 무조건 표시하고 오른쪽 데이터중 매치되는게 없다면 null을 표시한다.
+    2. RIGHT JOIN : `LEFT JOIN`의 반대개념이다, 오른쪽 테이블을 중심으로 왼쪽과 매칭되면 모두표시. 매칭되는 값이 없으면 null 이다.
+    
+* INNER JOIN : join 하는 두개의 table 모두에 데이터가 존재하는 행에 대해서만 결과를 가져온다.
+
+이미지를 참고하면 이해가 쉬워진다.
+
+
+```
+SELECT s.name, s.location_id, l.name AS address, l.distance  FROM student AS s LEFT JOIN location AS l ON s.location_id = l.id;
+```
+
+위 코드는 가장 많이사용 되는 형태의 join의 형태이다.
+
+```
+SELECT [column 이름]  FROM [table 이름] LEFT JOIN [table 이름] ON [JOIN 조건(매칭조건)];
+```
+정도로 이해해도 무방하지 않을까? 위에 코드 뒤에 where문을 붙여 조건을 추가하는것도 가능하다.
+on 뒤에 붙는 쿼리는 매칭할 조건이고 where 뒤에 붙는 쿼리는 if문으로 이해하면 될 것 같다.
