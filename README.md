@@ -10,7 +10,7 @@
     - [passport - 로그인 관리](https://github.com/lua928908/Archive/tree/master/passport/01)
     - [sequelize - javascript ORM](https://github.com/lua928908/Archive/tree/master/sequelize/01)
     - [multer - 파일 업로드](https://github.com/lua928908/Archive/tree/master/multer/01)
-    - [Redux - Saga](https://github.com/lua928908/Archive/tree/master/redux_saga/01)
+    - [ReduxSaga - 리덕스 사가란 무엇인가?](https://github.com/lua928908/Archive/tree/master/redux_saga/01)
   
 
 3. 인공지능(AI)

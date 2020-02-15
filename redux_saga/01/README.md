@@ -478,7 +478,7 @@ export default function* userSaga (){
 ```
 
 예를들어 버튼을 클릭함으로 인해 `LOG_IN` 타입을 dispatch 하게되면 `watchLogIn`이라는 watch함수가 `LOG_IN`이라는 dispatch가 발생하는지 아닌지 계속 감시하다가
-logIn함수를 실행시키고 logIn 함수가 logInAPI를 실행시킨다. 그럼 logInAPI는 궁극적으로 axios를 통해 restAPI(예제에서의 백엔드 서버는 node로 만듬 https://github.com/lua928908/react-sns-publish/tree/master/back 참고)로 요청을 보낸다.
+logIn함수를 실행시키고 logIn 함수가 logInAPI를 실행시킨다. 그럼 logInAPI는 궁극적으로 axios를 통해 backend API로 요청을 보낸다, 예제에서의 노드 백엔드 코드를 보고싶다면 [여기](https://github.com/lua928908/react-sns-publish/tree/master/back)를 참고하자
 axios 요청이 성공하게되면 다음줄인 LOG_IN_SUCCESS가 실행되고 reducers에 있는 LOG_IN_SUCCESS가 switch문에 걸리며 redux에 값이 삽입되게된다. 그래서 redux-saga로 비동기 함수를 만들때
 watch 함수와 axios요청함수 그리고 요청이후 success인지 fail인지에 따라 동작을 해줄 3가지의 함수가 셋트처럼 만들어져야 한다. 다소 번거로울수 있어도 나중에는 오류를 해결하거나 상황을 파악하는게 많은 도움이 된다.
 
@@ -487,3 +487,572 @@ __버튼클릭  ->  dispatch({type: LOG_IN})  ->  watchLogIn  ->  logIn  ->  log
 이런 형태로 기억해주면 될것 같다.
 
 전체 코드는 [여기](https://github.com/lua928908/react-sns-publish)에서 천천히 살펴보길 바란다.
+
+<br>
+
+
+## 다른 비동기 처리방법
+
+회사에 면접을 보러 다닐때 면접관 분들이 많이 했던 질문이 왜 redux-saga를 써야하냐라는 질문이였다. 이건 내나름대로의 답변이지만 결과적으로
+redux-saga를 안쓰면안되는건 아니다. react나 vue를 쓰지않고 SPA를 만들거나 어플리케이션을 만들 수 있듯 redux-saga를 사용하지 않아도 비동기코드를 처리하는건
+가능하다. 다만 조금더 체계적이고 일관성있는 관리를 하는데 유리하다고 생각한다.
+
+현재 근무중인 회사에서 액션함수 개념을 경험하기전에는 redux-saga를 사용한 관리만 알고있었다. 그래서 처음 지금회사에 입사해서 적응하기까지
+hook대신 class컴포넌트를 사용하거나 redux-form을 사용하거나 redux-saga대신 액션함수를 통해 dispatch를 하는등등이 스트레스 였다. 결국 두가지에 다 적응하면서
+오히려 구체적으로 어떤식으로 관리되고 있는지 이해하는데 도움이 되었다.
+아래 나오는 코드들은 redux-saga를 사용하지않고 promise를 통해 비동기 코드를 실행시키는 방식을 조금이나마 이해하는데 도움이 될까 싶어 적어보았다. 
+
+<br>
+
+#### Login 컴포넌트
+```
+import React, {Component} from 'react';
+import {Link} from "react-router-dom"
+import {Field, reduxForm} from "redux-form"
+import {connect} from "react-redux"
+import {formValueSelector} from "redux-form"
+
+import {Header, Footer} from "../index"
+import {withRequireNotAuth} from "../../hocs/"
+import InputField, {inputFieldWithButton, authNumberInput} from "../shared/InputField"
+import {company, email, password} from "../../lib/validation"
+import {loginAction} from "../../actions/auth"
+import Alert from "../common/Modal/Alert"
+import styled from "styled-components"
+
+const Register = styled.div`
+  display: inline-block;
+`
+
+const loginSelector = formValueSelector("login")
+
+class Login extends Component {
+  constructor(props){
+    super(props)
+
+    this.state = {
+      notFoundId: false,
+      invalidPassword: false,
+    }
+  }
+
+  handleSubmit = async (values) => {
+    try {
+      const {loginAction, history} = this.props
+      await loginAction({accountId: values.id, password: values.password})
+
+      // if(this.props.history.location.pathname === "/login") {
+      //   await history.push("/")
+      // }
+    }
+
+    catch(e){
+      console.error(e)
+      console.log(e.statusCode);
+      if(e.status === 404){
+        this.setState({notFoundId: true})
+        //password is incorrect logic
+      }else if(e.status === 409){
+        this.setState({invalidPassword: true})
+      }
+    }
+  }
+
+  closeModal = () => {
+    this.setState({notFoundId: false})
+    this.setState({invalidPassword: false})
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.idValue !== this.props.idValue) {
+      this.setState({notFoundId: false})
+    }else if(prevProps.pwValue !== this.props.pwValue){
+      this.setState({invalidPassword: false})
+    }
+
+
+  }
+
+  render() {
+    const {closeModal} = this
+    const {notFoundId, invalidPassword} = this.state
+    const {idValue, pwValue} = this.props
+    return (
+        <>
+          <Header />
+          <div id="container">
+            <form onSubmit={ this.props.handleSubmit(this.handleSubmit.bind(this))}>
+              <div id="login" className="bg_in">
+                <div className="layout_fix">
+                  <div className="account_tc">
+                    <div className="account_cont">
+                      <div className="layer_panel">
+                        <div className="con">
+                          <div className="intro_banner">
+                            <div className="d_pc">
+                              <div className="img_bx">
+                                <img src="../../../assets/images/banner_login_type1.jpg" alt=""/>
+                              </div>
+                            </div>
+                            <div className="o_mo" style={{display: "none"}}>
+                              <div className="img_bx">
+                                <img src="../../../assets/images/banner_login_type1_mo.jpg" alt=""/>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="login_form">
+                            <div className="heading">
+                              <h2 className="tit">쉽다에서 더 많은 서비스를 이용해보세요!</h2>
+                              <hr/>
+                            </div>
+                            <div className="inp_fld">
+                              <div className="inp_bx">
+                                <Field
+                                    component={InputField}
+                                    name="id"
+                                    title="아이디"
+                                    placeholder="6~20자리 영문/숫자를 입력하세요."
+                                    maxLength="20"
+                                    errorClass="error"
+                                />
+                              </div>
+                              <div className="inp_bx">
+                                <Field
+                                    component={InputField}
+                                    name="password"
+                                    title="비밀번호"
+                                    type="password"
+                                    placeholder="비밀번호를 입력하세요."
+                                    errorClass="error"
+                                />
+                              </div>
+                              <div className="link_bx">
+                                <ul className="find_account">
+                                  <li>
+                                    <Link to="/register">회원가입</Link>
+                                  </li>
+                                  <li>
+                                    <Link to="/login/id">아이디 찾기</Link>
+                                  </li>
+                                  <li style={{paddingLeft: "10px", marginLeft: "10px", background: "transparent url(../../assets/images/li_line.png) no-repeat 0 50%"}}>
+                                    <Link to="/login/password">비밀번호 찾기</Link>
+                                  </li>
+                                </ul>
+                              </div>
+                              <div className="btn_primary">
+                                <button style={{width: "100%"}}><a>로그인</a></button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {
+                notFoundId &&
+                <Alert
+                    message={["가입되지 않은 아이디입니다.", "확인 후 다시 시도해주세요."]}
+                    toggleAlert={closeModal}
+                />
+              }
+              {
+                invalidPassword &&
+                <Alert
+                    message={["아이디 또는 패스워드가 틀렸습니다.", "확인 후 다시 시도해주세요."]}
+                    toggleAlert={closeModal}
+                />
+              }
+            </form>
+          </div>
+          <Footer />
+        </>
+    );
+  }
+}
+
+function validate(values){
+  const errors = {}
+  if(!values.id) errors.id = "아이디를 입력해주세요."
+  if(!values.password) errors.password = "비밀번호를 입력해주세요."
+
+  return errors
+}
+
+const mapStateToProps = (state) => ({
+  idValue: loginSelector(state, "id"),
+  pwValue: loginSelector(state, "password")
+})
+const mapDispatchToProps = {
+  loginAction,
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(reduxForm({
+  form: "login",
+  validate,
+})(withRequireNotAuth(Login)));
+```
+
+로그인 버튼을 누르면 `actions`하위에 있는 `auth.js` 파일에 `loginAction` 액션함수를 실행시킨다. 
+
+#### actions/auth - 액션함수
+
+```
+import {ApiRoute} from './index'
+import {SubmissionError} from 'redux-form'
+import _ from 'lodash'
+import {history} from '../index'
+
+export const AUTH_SIGN_OUT_SUCCESS = "AUTH_SIGN_OUT_SUCCESS" // ApiRoute 에서 기본적으로 필요
+export const REGISTER_SUCCESS = "REGISTER_SUCCESS"
+export const CHECK_ID_DUPLICATE_SUCCESS = "CHECK_ID_DUPLICATE_SUCCESS"
+export const CHECK_COMPANY_NUMBER_SUCCESS = "CHECK_COMPANY_NUMBER_SUCCESS"
+export const CHECK_ID_DUPLICATE_FAIL = "CHECK_ID_DUPLICATE_FAIL"
+export const GET_FOWARDER_LIST_SUCCESS = "GET_FOWARDER_LIST_SUCCESS"
+export const GET_CUSTOMS_LIST_SUCCESS = "GET_CUSTOMS_LIST_SUCCESS"
+export const LOGIN_SUCCESS = "LOGIN_SUCCESS"
+export const LOGOUT_SUCCESS = "LOGOUT_SUCCESS"
+export const TOKEN_EXPIRED = "TOKEN_EXPIRED"
+export const REFRESH_TOKEN = "REFRESH_TOKEN"
+
+// 만료된 토큰 리프래쉬 하기
+export function refreshTokenAction(values) {
+  return async (dispatch, state) => {
+    try {
+      const {result} = await new ApiRoute({
+        path: '/api/auth/refresh',
+        method: 'post',
+        data: values,
+      }).request(dispatch, state, true)
+      dispatch({type: REFRESH_TOKEN, payload: result})
+      return result
+    } catch (e) {
+      return e
+    }
+  }
+}
+
+export function deleteAuth() {
+  return async (dispatch, state) => {
+    try {
+      await new ApiRoute({
+        path: '/auth',
+        method: 'delete'
+      }).request(dispatch, state)
+      dispatch({type: AUTH_SIGN_OUT_SUCCESS})
+      history.replace('/')
+    } catch (e) {
+      throw e
+    }
+  }
+}
+
+export function putTempPassword() {
+  return async (dispatch, state) => {
+    try {
+      await new ApiRoute({
+        path: '/auth/password/temp',
+        method: 'put'
+      }).request(dispatch, state)
+      dispatch({type: AUTH_SIGN_OUT_SUCCESS})
+    } catch (e) {
+      console.error(e)
+    }
+  }
+}
+
+// check duplicate id
+export function checkDuplicateId(userId){
+  return async(dispatch, state) => {
+    try{
+      await new ApiRoute({
+        path: '/api/auth/register',
+        method: 'get',
+        params: {accountId: userId},
+      }).request(dispatch, state)
+      dispatch({type: CHECK_ID_DUPLICATE_SUCCESS})
+    }catch(e){
+      dispatch({type: CHECK_ID_DUPLICATE_FAIL})
+      throw e
+    }
+  }
+}
+
+// check business number
+export function checkCompanyNumber(companyNumber){
+  return async(dispatch, state) => {
+    try{
+      await new ApiRoute({
+        path: '/api/auth/check/brn',
+        method: 'get',
+        params: {brn: companyNumber},
+      }).request(dispatch, state)
+      dispatch({type: CHECK_COMPANY_NUMBER_SUCCESS})
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// register
+export function registerSubmit(values){
+  return async (dispatch, state) => {
+    try{
+      const {result} = await new ApiRoute({
+        path: '/api/auth/register',
+        method: 'post',
+        data: values,
+      }).request(dispatch, state)
+      window.localStorage.setItem("accessToken", result.accessToken)
+      window.localStorage.setItem("refreshToken", result.refreshToken)
+      await dispatch({type: REGISTER_SUCCESS, payload: result})
+      return result
+    }catch(e){
+      console.error(e)
+      throw e
+    }
+  }
+}
+
+// register - 담당자 등록
+export function managersRegister(values){
+  return async (dispatch, state) => {
+    try{
+      const {result} = await new ApiRoute({
+        path: '/api/users/managers/register',
+        method: 'post',
+        data: values,
+      }).request(dispatch, state)
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// register - 추가정보 - Consignee
+export function addInfoConsignee(values){
+  return async (dispatch, state) => {
+    try{
+      const {result} = await new ApiRoute({
+        path: '/api/users/consignee',
+        method: 'put',
+        data: values,
+      }).request(dispatch, state)
+      return result
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// register - Fowarder list 가져오기
+export function getForwarderList(values){
+  return async (dispatch, state) => {
+    try{
+      const {result} = await new ApiRoute({
+        path: '/api/users/forwarder',
+        method: 'get',
+      }).request(dispatch, state)
+      dispatch({type: GET_FOWARDER_LIST_SUCCESS, payload: result})
+      return result
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// register - 추가정보 - Fowarder
+export function addInfoFowarder(values){
+  return async (dispatch, state) => {
+    try{
+      const {result} = await new ApiRoute({
+        path: '/api/users/forwarder',
+        method: 'put',
+        data: values,
+      }).request(dispatch, state)
+      return result
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+export function getCustomsList(values){
+  return async (dispatch, state) => {
+    try{
+      const {result} = await new ApiRoute({
+        path: '/api/users/customs',
+        method: 'get',
+      }).request(dispatch, state)
+      dispatch({type: GET_CUSTOMS_LIST_SUCCESS, payload: result})
+      return result
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// register - 추가정보 - Customs
+export function addInfoCustoms(values){
+  return async (dispatch, state) => {
+    try{
+
+      const {result} = await new ApiRoute({
+        path: '/api/users/customs',
+        method: 'put',
+        data: values,
+      }).request(dispatch, state)
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// login
+export function loginAction(values){
+  return async (dispatch, state) => {
+    try{
+      const {accountId, password} = values
+      const {result} = await new ApiRoute({
+        path: '/api/auth',
+        method: 'post',
+        data: {
+          accountId,
+          password,
+        },
+      }).request(dispatch, state)
+      const { accessToken, refreshToken } = result
+      window.localStorage.setItem('accessToken', accessToken)
+      window.localStorage.setItem('refreshToken', refreshToken)
+      await dispatch({type: LOGIN_SUCCESS})
+      await history.goBack()
+      return
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// logout
+export function logoutAction(){
+  return async (dispatch, state) => {
+    try{
+      window.localStorage.clear()
+      await dispatch({type: LOGOUT_SUCCESS})
+      window.location.href = '/login'
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// find Account Id
+export function findId(values){
+  return async (dispatch, state) => {
+    try{
+      const {BRN, email} = values
+      const {result} = await new ApiRoute({
+        path: '/api/auth/find/id',
+        method: 'post',
+        data: {
+          BRN,
+          email,
+        },
+      }).request(dispatch, state)
+      return result
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// find Password
+export function findPassword(values){
+  return async (dispatch, state) => {
+    try{
+      const {accountId, email} = values
+      const {result} = await new ApiRoute({
+        path: '/api/auth/find/password',
+        method: 'post',
+        data: {
+          accountId,
+          email,
+        },
+      }).request(dispatch, state)
+      return result
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+// register - get file path
+export function getFileUploadPath(values){
+  return async (dispatch, state) => {
+    try{
+      console.log("getFileUploadPath 실행@@@")
+      const {result} = await new ApiRoute({
+        path: '/api/files/upload',
+        method: 'get',
+        params: values,
+      }).request(dispatch, state)
+      return result
+    }catch(e){
+      throw e
+    }
+  }
+}
+
+
+// register - S3 file put
+export function s3PutUploadFile(values){
+  return async (dispatch, state) => {
+    try{
+      const {file, type} = values
+      const fileMimeType = file.type
+      const fileName = file.name
+      const {url, path} = await dispatch(getFileUploadPath({type, mimeType: fileMimeType}))
+      let resultData = null
+
+      let reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        let getBase64 = reader.result.split(',')[1];
+        resultData = new Buffer.from(getBase64, "base64")
+
+        const {result} = await new ApiRoute({
+          method: 'put',
+          url,
+          data: resultData,
+          headers : {"Content-Type" : fileMimeType }
+        }).request(dispatch, state)
+      }
+      return path
+    }catch(e){
+      throw e
+    }
+  }
+}
+```
+
+그럼 `loginActions`함수가 axios 요청으로 백엔드 서버에 api를 보낸이후 `await dispatch({type: LOGIN_SUCCESS})` 부분이 dispatch를 하게된다.
+
+
+#### reducers/auth.js
+
+```
+```
+
+`LOGIN_SUCCESS`라는 타입의 dispatch가 이루어지면 `reducers/auth`에 있는 switch문에 `LOGIN_SUCCESS`가 걸리면서 전달받은 값이 redux에 store에 관리되게된다.
+
+#### redux-saga를 사용할 때
+
+__버튼클릭  ->  dispatch({type: LOG_IN})  ->  watchLogIn  ->  logIn  ->  logInAPI  ->  success or fail (another dispatch)  ->  reducer <br>__
+
+#### action 함수를 사용할 때
+__버튼클릭 -> loginActions -> await dispatch({type: LOGIN_SUCCESS}) -> reducer <br>__
+
+라고하는 redux-saga를 사용할 때와 비슷한 흐름의 동작이 이루어진다. 제너레이터를 사용해 코드의 순서를 조율할 것인지 promise를 통해 비동기 코드의 순서를 관리할 것인지에 대한
+차이정도만이 있다고 나는 생각한다. 
