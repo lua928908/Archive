@@ -234,3 +234,69 @@ SELECT [column 이름]  FROM [table 이름] LEFT JOIN [table 이름] ON [JOIN �
 ```
 정도로 이해해도 무방하지 않을까? 위에 코드 뒤에 where문을 붙여 조건을 추가하는것도 가능하다.
 on 뒤에 붙는 쿼리는 매칭할 조건이고 where 뒤에 붙는 쿼리는 if문으로 이해하면 될 것 같다.
+
+
+## mysql 사용자 관리
+
+#### 권한부여
+
+DB 서버에 접속하는 사용자가 어느 db에 접속할 수 있는지 액세스 권한을 부여한다.
+*을 사용하면 모든 데이터베이스, 테이블을 제어 대상으로 한다.
+
+```
+GRANT 권한 ON 데이터베이스.테이블 TO `아이디`@`호스트` IDENTIFIED BY "비밀번호"
+
+GRANT DELETE,INSERT,SELECT,UPDATE ON class.* TO `lua`@`%` IDENTIFIED BY '1234'; 
+```
+
+위 예제는 아이디는 lua 비밀번호는 1234인 유저가 class 데이터베이스에 접근해 CRUD를 가능하게 하는 예제이다.
+모든 권한을 주고 싶으면 `all privileges` 이라고 입력하면 된다.
+
+<br>
+
+```
+1) 특정 IP 접근 허용 설정
+grant all on DB명.테이블명 to 'root'@'220.000.00.000' identified by 'root의 패스워드';
+
+
+2) 특정 IP 대역 접근 허용 설정
+grant all on DB명.테이블명  to 'root'@'220.000.%' identified by 'root의 패스워드';
+
+
+3) 모든 IP의 접근 허용 설정
+grant all on DB명.테이블명  to 'root'@'%' identified by 'root의 패스워드'
+```
+
+혹은 위처럼 IP를 특정할 수 있다.
+
+<br>
+
+```
+SHOW GRANTS FOR [사용자 아이디]
+```
+
+SHOW GRANTS를 사용해 해당 아이디에 설정된 권한을 볼 수 있다.
+
+<br>
+
+#### 권한제거 - REVOKE
+
+```
+REVOKE 권한 ON 데이터베이스.테이블 FROM 사용자
+
+REVOKE delete ON class.* FROM lua;
+```
+
+위와 같은 코드를 통해 사용자의 권한을 제거할 수 있다.
+
+<br>
+
+#### 유저삭제 - DROP
+
+```
+DROP USER `사용자`@`아이피`;
+
+DROP USER `lua`@`%`;
+```
+
+위와 같은 코드를 통해 사용자를 삭제할 수 있다.
