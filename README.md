@@ -18,6 +18,7 @@
 
 4. MySQL
     - [Mysql 기초 배워보기](https://github.com/lua928908/Archive/tree/master/mysql/01)
+    - [Mybatis 사용하기](https://github.com/lua928908/Archive/tree/master/mysql/02)
     
 ETC
 
