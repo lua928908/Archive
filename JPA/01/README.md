@@ -242,4 +242,64 @@ em.setFlushMode(FlushMode.AUTO) // 기본값, 커밋이나 쿼리를 실행할 �
 em.setFlushMode(FlushModeType.COMMIT) // 커밋할 때만 플러시 한다.
 ```
 
-기본 값이 FlushMode.AUTO인데 그냥 이상태로 쓰는경우가 대부분이라고 한다. 굳이 바꿀필요가 없다. 
+기본 값이 FlushMode.AUTO인데 그냥 이상태로 쓰는경우가 대부분이라고 한다. 굳이 바꿀필요가 없다.
+
+<br>
+
+## 데이터 베이스 스키마 자동생성
+
+JPA에는 DDL 이라는 데이터베이스를 자동으로 생성해주는 기능이 있다.
+* DDL을 애플리케이션 실행시점에 자동 생성
+* 테이블 중심 -> 객체 중심
+* 데이터베이스 방언을 활용해서 데이터베이스에 맞는 적절한 DDL 생성
+* 개발용 으로만 사용해야 한다. production에서 사용시 table을 drop 후 생성하기 때문에 위험.
+
+개발할 때 테이블을 먼저 만들어놓고 개발을 하는 경우가 많지만 자동으로 DB 스키마를 만들어 주기 때문에 편리하다.
+개발시 DB 스키마가 변경될 가능성이 높은데 DB를 다시만들거나 `ALTER` 문을 통해 스키마를 변경할 필요가 없어진다.
+
+
+#### 옵션
+| 옵션 | 설명 |
+|---|:---|
+| `create` | 기존테이블 삭제 후 다시 생성 (DROP + CREATE) |
+| `create-drop` | create와 같으나 종료시점에 테이블 DROP, 테스트케이스 이후 깔끔하게 값을 초기화 하고 싶을 때 유용 |
+| `update` | 변경된 부분만 반영, 애플리케이션이 구동중인 상태에서 변동사항이 생기면 변동사항만 추가시켜준다, 삭제는 적용안됨. |
+| `validate` | 엔티티와 테이블이 정상 매핑 되었는지만 확인 |
+| `none` | 사용하지 않음, 사실 없는 옵션이지만 DDL을 사용하지 않는경우 관례상 none으로 표기한다. (주석처리와 같음) |
+
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.2"
+             xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
+    <persistence-unit name="hello">
+        <properties>
+            <!-- 필수 속성 -->
+            <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/> <!-- 무슨DB를 쓰는지 -->
+            <property name="javax.persistence.jdbc.user" value="sa"/> <!-- 유저이름 -->
+            <property name="javax.persistence.jdbc.password" value=""/> <!-- 비밀번호 -->
+            <property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://localhost/~/test"/> <!-- 접근URL 경로 -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/> <!-- 하이버네이트 방언 지정-->
+
+            <!-- 옵션 -->
+            <property name="hibernate.show_sql" value="true"/> <!-- 실제 구동하는 SQL 쿼리를 보여줌 -->
+            <property name="hibernate.format_sql" value="true"/> <!-- 읽기 조금더 편하게, 코드를 이쁘게 포맷팅해줌 -->
+            <property name="hibernate.use_sql_comments" value="true"/> <!-- 실행된 SQL 쿼리가 어느객체에서 실행되는지 보여줌 -->
+            <property name="hibernate.hbm2ddl.auto" value="create" />  <!-- DDL 옵션 -->
+        </properties>
+    </persistence-unit>
+</persistence>
+```
+
+처음 우리가 살펴보았던 `persistence.xml`이다. 'DDL 옵션' 이라고 주석을 달아놓은 `<property name="hibernate.hbm2ddl.auto" value="create" />` 이부분이 DDL 사용을
+결정하는 옵션 부분이다.
+
+절대 절대 운영 서버에서 데이터베이스 스키마 자동생성을 사용하면 안된다.
+* 개발초기단계에서는 create 또는 update
+* 테스트 서버에서는 update 또는 validate
+* 스테이징과 운영 서버는 validate 또는 none을 사용할 수 있겠으나 그냥 쓰지마라
+
+테스트 서버에도 사용하지 않는 것이 낫다. 혹시나 실수로 스키마가 update되어 alter가 되어버리면 이것역시 상당히 문제가 될 수 있다.
+의도치 않게 alter 쿼리가 실행되고 데이터베이스에 락이 걸리면 서비스가 몇분동안 중지되게 된다.
+운영서버에 create나 create-drop, update를 사용하면 DB가 날라가기 때문에 절대 사용하면 안된다, 사용하면 대참사
