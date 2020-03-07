@@ -323,7 +323,6 @@ JPA에는 DDL 이라는 데이터베이스를 자동으로 생성해주는 기�
 
 | 어노테이션 | 설명 |
 |---|:---|
-| `name` |  |
 | `insertable, updateable` | `insertable`는 컬럼이 수정되었을 때 반영할 것 이냐이고, `updateable`는 업데이트가 되었을 때 반영할 것인지를 결정한다. 기본값을 true이다. |
 | `nullable (DDL)` | null값의 허용 여부를 설정한다. 기본이 true인데 false로 바꾸면 notNull 제약조건이 붙게 된다. 즉 nullable=false 이면 null일 수 없게된다. |
 | `unique (DDL)` | unique=true를 해주면 유니크 제약조건을 걸 수 있는데 잘안쓴다. 이름이 랜덤처럼 알아보기 어렵게 붙어서 디버깅할때 확인이 어렵다. 대신 @Table(uniqueConstraints = example) 를 많이 쓴다. |
@@ -343,4 +342,62 @@ JPA에는 DDL 이라는 데이터베이스를 자동으로 생성해주는 기�
 문제는 나중에 수정사항이 생겨 맨앞에 또다른 등급이 추가되게되면 이미 기존에 저장되었던 role 컬럼에 숫자는 변하지 않기 때문에 버그를 만들게 된다.
 그러므로 `@Enumerated`를 사용할 때는 `@Enumerated(EnumType.STRING)`으로 사용해야 한다.
 
-  
+<br>
+
+## 기본 키 매핑
+기본키를 매핑하는데에는 크게 2가지가 있다.
+* @Id - 내가 직접 id를 할당하는 경우 (DB에 값을 넣을 때 id를 넣어주어야함.)
+* @GeneratedValue - 자동생성, auto_increment 같은것이 해당된다.
+
+id는 별것 없다 그냥 `@Id`라고만 사용하면 데이터를 삽입할 때 id도 내가 직접 넣어주어야 한다.
+`@GeneratedValue`를 거의 사용하게 되는데 사용할 수 있는 옵션들이 있다.
+
+| 어노테이션 | 설명 |
+|---|:---|
+| `IDENTITY` | 데이터베이스에 위임, MySQL |
+| `SEQUENCE` | 데이터베이스 시퀀스 오브젝트 사용, Oracle |
+| `TABLE` | 키 생성 전용 테이블 사용 @TableGenerator 어노테이션이 필요하다, 모든 DB에서 사용가능하지만 다만 성능이 떨어지고 최적화가 안되어있다. 코드는 시퀀스를 적용할 때와 비슷하다 |
+| `AUTO` | 방언에 따라 자동 지정, 기본값|
+
+기본값은 `AUTO` 이다. 오토를 선택하면 데이터베이스에 따라 자동으로 `IDENTITY`, `SEQUENCE`, `TABLE`중 하나로 알아서 선택하는 것이다.
+즉 결국엔 3가지 옵션이고 오토를 선택하면 DB에 따라 셋중 한개를 JPA에서 자동으로 결정하는 것이다.
+
+
+```
+@ENtity
+@SequenceGenerator(
+    name = "MEMBER_SEQ_GENERATOR",
+    sequenceName = "MEMBER_SEQ", // 매핑할 데이터베이스 시퀀스 이름
+    initialValue= 1,
+    allocationSize = 1)
+public class Member{
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "MEMBER_SEQ_GENERATOR")
+    private Long id;
+}
+```
+시퀀스를 사용할 때 시퀀스이름을 정하지 않으면 하이버네이트에서 만드는 시퀀스를 사용하게되는데
+직접 정해주고 싶다면 entity 클래스에 @SequenceGenerator로 시퀀스를 만들고 generator의 속성에 값을 전달하면 된다.
+
+<br>
+
+#### 코드 예제
+```
+@Id
+@GeneratedValue(strategy = GenerationType.AUTO)
+private Long id;
+```
+
+위와 같은 형태로 strategy(전략)의 값으로 타입을 넣어주면된다.
+
+#### id의 타입 지정하기
+* id를 지정할 때 int는 애매하다. 0의 삽입이 가능하고 담을 수 있는 값이 작기 때문이다.
+* Integer도 애매하다. 10억이 넘으면 값을 담을 수 없고 나중에 타입을 변경하는 것이 문제가 되기 때문이다.
+* Long을 사용하길 권장한다. Long과 Integer타입이 공간이 2배가 차이가 나겠지만 전체 애플리케이션으로 볼 때는 거의 영향을 주지 않는다.
+
+
+#### GenerationType.IDENTITY 전략의 특징 (AUTO)
+* 원래 어떤값을 삽입해도 즉, `em.persist()` 를 해도 즉시 insert문이 생성되는게 아니라 tx.commit() 시점에 insert 쿼리가 생성된다고 했다. 하지만 예외적으로 IDENTITY 전략을 사용할떄는  persist()를 할 때 바로 insert 쿼리가 생성되게 된다. 왜냐면 영속성 컨텍스트에서 관리를 하려면 키가 있어야 하는데 정작 key가 뭔지 알려면 insert를 통해 생성을 해야 key를 알 수 있기 때문이다.
+* DB에 `em.persist()` 하는 시점에 insert가 실행되고 영속성 컨텍스트에서는 id를 가지고 관리하게 되는데 정작 select문이 실행되지 않는 이유는 JDBC 내부적으로 이런상황에 대한 return값이 이미 설계되어 있기 때문에 select를 하지않았음에도 `member.getId()`를 하면 id값을 가져오게 된다.
+* 위와 같은 이유로 `GenerationType.IDENTITY`전략 에서는 쓰기를 모아서 실행하는 것이 안된다. 하지만 실제 개발을 할 때 버퍼링으로 모아서 write 하는것이 크게 메리트가 있는건 아니라고 한다.
+
