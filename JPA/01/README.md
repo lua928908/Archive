@@ -444,10 +444,90 @@ public class Member{
 
     @ManyToOne // Member가 n이고 Team이 1 이다. 그러므로 ManyToOne이 된다.
     @JoinColumn(name = "TEAM_ID") // TEAM_ID가 프라이머리키 이기 떄문에 name의 값으로 TEAM_ID를 넣어준 것이다.
-    @private Team team;
-
-    
+    @private Team team;    
 }
 ```
 
-관계가 무엇인지, 조인하는 컬럼이 무엇인지 써주면 된다.
+Member 객체에 Team 필드부분을 관계가 무엇인지, 조인하는 컬럼이 무엇인지 써주면 된다.
+
+<br>
+
+```
+Team team = new Team;
+team.setName("TeamA");
+em.persist(team);
+
+Member member = new Member();
+member.setUsername("member1");
+member.setTeam(team); // 아까와 달리 생성한 team을 그냥 set으로 넣어준다.
+em.persist(member);
+
+Member findMember = em.find(Member.class, member.getId());  
+Team findTeam = findMember.getTeam(); // 아까와 달리 teamId를 받을 필요도없고 그냥 찾은 member에서 get으로 가져오면 된다.
+```
+위 처럼 단방향을 지정했으므로 그냥 get이나 set으로 마치 자바 컬렉션을 통해 값을 넣거나 가져오는 것처럼 사용할 수 있게되었다.
+
+<br>
+
+## 양방향 객체 연관관계
+
+위에 내용, 단방향 매핑을 보면 member에서 team을 가져오는 것은 됐지만 team에서 member를 가져오는 것은 안된다.
+하지만 따지고 보면 둘다 가능해야 맞다. team을 통해 소속된 member들을 가져올 수 있어야 맞는것 아니겠나
+이런것을 위해 필요한게 양방향 매핑(양방향 연관관계)이다.
+
+* 객체지향 관점으로 보면 레퍼런스가 한쪽으로 참조를하지 양쪽에서 참조를 하지않는다.
+* 하지만 DB입장에서는 방향이라는 개념자체가 없다 그냥 외래키(FK)를 가지고 내가원하는 방향에서 아무렇게나 join으로 확인해 볼 수 있기때문이다. 이 예제에서는 member가 foreign key를 통해 team을 가져오거나 team이 foreign key을 통해 member를 가져오는게 원래 가능하다는 뜻이다. 테이블에서는 방향이란 개념자체가 없고 외래키 만으로 양방향이 이미 다 할수있는 상태다.
+* 이런 패러다임의 차이를 극복하기위해 객체입장에서는 member와 team의 둘다 foreign key를 넣어주어야 하는 상황인거다.
+
+```
+public class Team{
+    @Id
+    @GeneratedValue
+    @Column(name = "TEAM_ID")
+    private Long id;
+    private String name;
+
+    @OneToMany(mappedBy = "team") // team이 1이고 member가 n이니까 OneToMany 이다, mappedBy는 내가 team으로 매핑되어있다. 나의 반대편 사이트에는 team이라는 필드가 있다는 의미로 보면 된다.(반대편인 member 객체는 나를 team이라는 필드에 저장한다는 의미) 
+    private List<Member> members = new ArrayList<>(); // 관례인데 new ArrayList()로 초기화를 하는것이다. add할때 null포인트가 안뜨게 하려고 하는 관례이다.
+}
+```
+양방향 관계를 위해 Member객체에 관계를 설정했드시 Team객체에 관계를 설정한다. 
+
+```
+Team team = new Team;
+team.setName("TeamA");
+em.persist(team);
+
+Member member = new Member();
+member.setUsername("member1");
+member.setTeam(team); // 아까와 달리 생성한 team을 그냥 set으로 넣어준다.
+em.persist(member);
+
+Member findMember = em.find(Member.class, member.getId());  
+List<Member> members = findMember.getTeam().getMembers(); // getTeam으로 멤버의 팀을 가져왔는데 다시 getMember()를 한다. 근데 이게 가능하다 왔다갔다 하는행위가, 양방향 관계 이기 때문이다.
+```
+위 처럼 양방향 관계를 매핑했기 때문에 member에서 team을 가져오고 team에서 member를 가져오는게 가능하다.
+양쪽에서 모두 객체 그래프 탐색이 가능해졌다.
+
+* 객체는 가급적 단방향이 좋다. 양방향으로 하면 신경써야할게 많다.
+* 사실상 객체에서 양방향 연관관계는, 그냥 단방향 연관관계가 두개가 있는것이다.
+* 객체입장에서는 단방향이 2개, DB(테이블) 입장에서는 양방향이 1개 있는 것이다. (원래 테이블은 양방향이니까) 
+* 두개의 연관관계중 왜래키를 소유하는 table이 Owner가 되고 FK를 제공한 테이블은 mappedBy(가짜 매핑)가 된다.
+* FK를 소유하는 테이블을 오너로 하는이유는 여러가지이지만 무엇보다 객체에 어떤변화가 생겼을때 엉뚱한 곳에서 쿼리가 날라가면 디버깅할때 너무 헷갈리고 성능이슈도 존재한다고 한다.
+* 외래키를 가지고 있는 쪽이 주인이 되는게 좋은이유가 FK를 소유하는 테이블이 무조건 N이 되고 FK를 제공한 쪽이 1이 되기때문에 많은 고민거리들이 해결된다.
+
+1. 객체는 단방향 2개, 테이블은 원래 양방향
+2. 그래서 객체에 단방향을 서로 지정해야한다.
+3. 단방향을 2개를 만들되 누가 메인이 될것이냐를 결정하는게 mapped다.
+4. 메인을 결정하는 기준은 FK를 가지고 있는 table과 매핑한 객체가 된다. (FK를 제공한 table이 아닌 가지고 있는 테이블)
+
+<br>
+
+## 연관관계의 주인(Owner)
+
+#### 양방향 매핑 규칙
+* 객체의 두 관계중 하나를 연관관계의 주인으로 지정
+* 연관관계의 주인만이 뢰개 키를 관리(등록, 수정)
+* 주인이 아닌쪽은 읽기만 가능
+* 주인은 mappedBy 속성 사용 X
+* 주인이 아니면 mappedBy 속성으로 주인 지정
