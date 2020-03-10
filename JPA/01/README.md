@@ -409,3 +409,45 @@ private Long id;
 * DB에 `em.persist()` 하는 시점에 insert가 실행되고 영속성 컨텍스트에서는 id를 가지고 관리하게 되는데 정작 select문이 실행되지 않는 이유는 JDBC 내부적으로 이런상황에 대한 return값이 이미 설계되어 있기 때문에 select를 하지않았음에도 `member.getId()`를 하면 id값을 가져오게 된다.
 * 위와 같은 이유로 `GenerationType.IDENTITY`전략 에서는 쓰기를 모아서 실행하는 것이 안된다. 하지만 실제 개발을 할 때 버퍼링으로 모아서 write 하는것이 크게 메리트가 있는건 아니라고 한다.
 
+<br>
+
+## 단방향 매핑
+
+```
+Team team = new Team;
+team.setName("TeamA");
+em.persist(team);
+
+Member member = new Member();
+member.setUsername("member1");
+member.setTeamId(team.getId()); // team을 set하는게 아닌 id를 set하고있다.
+em.persist(member);
+
+Member findMember = em.find(Member.class, member.getId());  
+Long findTeamId = findMember.getTeamId(); // team의 id를 찾아야한다.
+Team findTeam = em.find(Team.class, findTeamId); teamId를 가지고 다시 team을 찾는등 계속 쿼리를 날리는 등의 작업이 생긴다.
+```
+
+위 코드를 보자 객체지향 스럽지않다. member를 찾거나 team 찾을때 member는 team을 team이라는 객체로 가지고있는 것이 아니라 마칭 DB처럼 외래키로 가지고 있다.
+그렇기 떄문에 값을 찾거나 가져오려 할때 레퍼런스로 참조하지 못하고 id를 가져와서 id를 가지고 다시  팀을 찾고있다.
+
+이 부분을 단방향 매핑을 통해 해결한다면
+
+```
+public class Member{
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(name = "USERNAME")
+    private String username;
+
+    @ManyToOne // Member가 n이고 Team이 1 이다. 그러므로 ManyToOne이 된다.
+    @JoinColumn(name = "TEAM_ID") // TEAM_ID가 프라이머리키 이기 떄문에 name의 값으로 TEAM_ID를 넣어준 것이다.
+    @private Team team;
+
+    
+}
+```
+
+관계가 무엇인지, 조인하는 컬럼이 무엇인지 써주면 된다.
