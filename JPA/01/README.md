@@ -444,7 +444,7 @@ public class Member{
 
     @ManyToOne // Member가 n이고 Team이 1 이다. 그러므로 ManyToOne이 된다.
     @JoinColumn(name = "TEAM_ID") // TEAM_ID가 프라이머리키 이기 떄문에 name의 값으로 TEAM_ID를 넣어준 것이다.
-    @private Team team;    
+    private Team team;    
 }
 ```
 
@@ -516,10 +516,6 @@ List<Member> members = findMember.getTeam().getMembers(); // getTeam으로 멤�
 * FK를 소유하는 테이블을 오너로 하는이유는 여러가지이지만 무엇보다 객체에 어떤변화가 생겼을때 엉뚱한 곳에서 쿼리가 날라가면 디버깅할때 너무 헷갈리고 성능이슈도 존재한다고 한다.
 * 외래키를 가지고 있는 쪽이 주인이 되는게 좋은이유가 FK를 소유하는 테이블이 무조건 N이 되고 FK를 제공한 쪽이 1이 되기때문에 많은 고민거리들이 해결된다.
 
-1. 객체는 단방향 2개, 테이블은 원래 양방향
-2. 그래서 객체에 단방향을 서로 지정해야한다.
-3. 단방향을 2개를 만들되 누가 메인이 될것이냐를 결정하는게 mapped다.
-4. 메인을 결정하는 기준은 FK를 가지고 있는 table과 매핑한 객체가 된다. (FK를 제공한 table이 아닌 가지고 있는 테이블)
 
 <br>
 
@@ -531,3 +527,87 @@ List<Member> members = findMember.getTeam().getMembers(); // getTeam으로 멤�
 * 주인이 아닌쪽은 읽기만 가능
 * 주인은 mappedBy 속성 사용 X
 * 주인이 아니면 mappedBy 속성으로 주인 지정
+
+#### 양방향 연관관계 주의점!
+1. 주인이 아닌 
+
+```
+Team team = new Team();
+team.setName("TeamA");
+em.persist(team);
+
+Member member = new Member();
+member.setName("member1");
+
+team.getMembers().add(member);
+
+em.persist(member);
+```
+
+위 코드가 양방향 매핑시 가장 많이 하는 실수이다.
+얼핏보면 양방향 관계니까 정상적인 코드처럼 보이지만, 잘못된 코드다.
+위 코드에서 주인(Owner)은 member 이다. 그리고 team객체에 있는 members는 `mappedBy`이다. 즉 가짜매핑, 읽기전용이다.
+그런데 읽기전용인 members 에서 getMembers를 통해 가져와서 add를 하려고 하니까 값이 저장이 안된것이다.
+
+양방향 매핑에서 FK를 가지고 있는 테이블인 member는 Owner이고 team은 mappedBy(가짜매핑)이므로 읽기전용이라 저장이 안된것이다.
+
+결국 오너에서 값을 넣어야한다. 라는점인데 양방향인경우 양쪽에 다 값을 넣어주는 것이 더 맞는방법이다.
+왜냐하면 team만들어 persist()하고 member를 만들어 persist()한 상태에서 `em.find(Team.class, team.getId())`를 했다면 이코드는
+DB에서 조회하는게 아니라 영속성 컨텍스트의 1차캐시에서 가지고오게 되어버린다. 실제로는 DB에서 조회를 해와야 되는데
+1차캐시에 team의 값이 있다보니 쿼리가 안나가고 그냥 1차캐시에서 가지고있던 값을 가지고오게 되는것이다. 
+
+이런문제 때문에도 양방향에서 값을 넣어주는 상황이 발생하면 member와 team에 둘다 값을 넣어주는것이 맞다.
+나중에 테스트 케이스를 작성할 때도 JPA와 상관없이 순수 자바상태로 작성해야 하는데 이런 상황에서도 문제가 생긴다.
+
+결론은 양방향 연관관계에서 값을 세팅할때에는 양쪽 둘다 값을 넣어주어야 한다.
+
+<br>
+
+#### 극복하는 방법 - 연관관계 편의 메소드를 생성하자.
+위에 내용처럼 양방향에서 값을 넣을때 Owner와 mapped(가짜매핑)에 둘다 값을 넣자고 했다.
+그런데 사람이 하는일이기 때문에 실수를 할 가능성이 충분히 있다. 그렇기 때문에 연관관계 편의 메소드를 만들어 실수를 줄이는 방법이 권장된다. (연관관계 편의메소드라는 표현은 김영한 님이 그냥 정한 표현)
+
+```
+public class Member{
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(name = "USERNAME")
+    private String username;
+
+    @ManyToOne // Member가 n이고 Team이 1 이다. 그러므로 ManyToOne이 된다.
+    @JoinColumn(name = "TEAM_ID") // TEAM_ID가 프라이머리키 이기 떄문에 name의 값으로 TEAM_ID를 넣어준 것이다.
+    private Team team;
+
+    public Long getId() {return id;}
+
+    public void setId(Long id) {this.id = id;}
+
+    public String getUsername() {return username;}
+
+    public void setUsername(String username) {this.username = username;}
+
+    public Team getTeam() {return team;}
+
+    // 편의 메소드
+    public void setTeam(){
+        this.team = team;
+        team.getMembers().add(this);
+    }
+}
+```
+
+member Entity에 `setTeam()`을 하면 원래는 그냥 `this.team = team;` 부분만 존재했지만
+`team.getMembers().add(this);`를 추가해주는 것이다. 즉 member에 team을 세팅할때 내가인수로 받은 team에 getMembers().add()를 내가직접 해주는 것이다. 애초에 실행되게끔 member의 set에 team의 set까지 미리 정해놓는 것이다.
+
+참고로 JPA 마이스터 김영한님의 경우 이런 편의메소드를 만들때 이름을 그냥 관례적으로 set으로 쓰지않고 change와 같은 prefix를 넣어서 이게단순히 관례적인 getter, setter가 아니라
+중요한 역할을 하는것을 개발자가 눈치채기 쉽게 만든다고 한다. 내생각에도 이게 나은것같다. 메소드가 굉장히 많아질텐데 이름을 다르게하지않으면 나중에 의미를 파악하기 너무 어려울것 같다.
+이런 편의메소드를 1:N 관계에서 둘중 하나에만 넣어주어야 한다. 만약 둘다넣으면 무한루프에 걸리거나 버그가 발생할 수 있다. 상황마다 어디에 넣을것인가는 달라질 수 있어서 꼭 1에 넣어가 N에 넣어야 하는것은 아니다.
+
+#### 정리
+1. 단방향 매핑만으로도 이미 연관관계 매핑이 끝나게끔 노력해야한다.
+2. 양방향 매핑은 반대방향으로 조회, 객체 그래프 탐색이 가능해지는 추가되는 것 뿐이다.
+3. JPQL에서 역방향으로 탐색할 일이 많다. (실무에서는 생각보다 역방향으로 조회해야 할 일이 많기 때문에)
+4. 단방향 매핑을 잘 하고 양방향은 필요할 때 추가해도 된다. (테이블에 영향을 주지 않음)
+5. 객체지향으로 설계하는 입장에서 양방향 관계가 별로 좋을게없다, 고민거리만 많아지므로 단방향으로 최대한 만들고 정말 필요하면 나중에 양방향으로 구현한다.
