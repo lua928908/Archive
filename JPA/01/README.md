@@ -642,4 +642,44 @@ member Entity에 `setTeam()`을 하면 원래는 그냥 `this.team = team;` 부�
 3. 구현 클래스마다 테이블 전략 : 구현하는 `class`마다 1:1 매핑하듯 `table`을 만들어 주는 것이다. 부모에서 부터 공통된 값을 상속받는게 아니라 그냥 각 table마다 필요한 값을 다 가지고 있는것이다. 다소 중복이 발생하지만 가장 직관적인 방식이다.
 
 위 3가지 방식중 무엇을 사용하든 JPA는 다 매핑을 하도록 지원을 한다.
+JPA 에서 기본으로 제공하는 전략은 `single table` 전략으로 한테이블에 다 때려박는 전략을 기본으로 채택하고 있다.
 
+```
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED) // 상속관계 매핑 전략을 JOINED로 설정한다 (join을 통한 구현)
+public class Item {
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String name;
+    private Long price;
+}
+
+```
+위 코드처럼 부모 Entity 객체(부모DB)에 `@Inheritance`어노테이션에 전략을 JOINED로 변경하고
+```
+@Entity
+public class Book extends Item {
+    private String author;
+
+    private String isbn;
+}
+
+```
+자식 Entity 객체가 부모 Entity 객체를 extends로 상속하면 JPA가 알아서 부모엔티티에 있는 값을 자식에도 넣어준다.
+
+```
+Book book = new book();
+
+book.setName("자유론") // 부모 테이블
+book.setPrice("10000"); // 부모 테이블
+book.setAuthor("존 스튜어트 밀"); // 자식 테이블
+
+em.persist(book);
+```
+
+이런식으로 값을 저장하면 부모 item에서부터 상속받는 name 과 price는 부모에 들어가고
+author는 자식에 들어가는데 대신 컬럼에 PK와FK를 가지고 있게된다 PK와FK가 같은 값이된다.
+
+나중에 find로 값을 가져올때에도 알아서 JPA가 INNER JOIN을 통해 값을 가져온다. 매핑을 잘하면 이렇게 편하게 사용할 수 있게 된다.
