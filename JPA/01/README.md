@@ -746,3 +746,162 @@ public class member extends BaseEntity{
 * 테이블과 관계가 없고, 단순히 엔티티가 공통으로 사용하는 매핑정보를 모으는 역할이다
 * 주로 등록일, 수정일, 등록자, 수정자 같은 전체 엔티티에서 공통으로 사용하는 정보를 모을 때 사용된다
 * `@Entity`클래스는 엔티티나 `@MappedSuperclass`로 지정한 클래스만 상속가능하다. 즉, 부모객체에 `@MappedSuperclass` 또는 `@Entity` 어노테이션이 있어야만 자식객체가 extends를 해서 부모객체에 정보를 상속할 수 있다는 뜻이다.
+
+<br>
+
+## 프록시 와 연관관계 객체
+
+* 프록시
+* 즉시 로딩과 지연 로딩
+* 지연로딩 활용
+* 영속석 전이 (CASCADE)
+* 고아 객체
+* 영속성 전이 + 고아 객체, 생명주기
+* 연관관계 관리
+
+#### 프록시
+
+```
+Member member = em.find(Member.class, 1L);
+printMember(member); // 멤버 정보를 출력하는 메서드
+
+printMemberAndTeam(member); // 멤버와 팀을 함께 출력하는 메서드
+```
+
+예를들어 위 경우처럼 프로젝트에서 멤버만 출력하는 경우 혹은 멤버와 팀을 같이 출력해야하는 경우가 있을때
+멤버와 팀을 함께 출력하는 로직에서는 `Member member = em.find(Member.class, 1L);`를 통해 멤버를 가져왔을 때 멤버와 팀정보를
+함께 가지고 있는게 상관이없다. 오히려 좋다 하지만 멤버정보만 출력하는 경우에도 팀정보까지 가지고 온다면 이것은 낭비인 셈이다.
+JPA에서는 한번에 필요없는 정보까지 가져오는것을 지연로딩과 프록시를 통해 해결한다.
+
+JPA에서는 `em.find()`도 있지만 `em.getReference()`도 있다. find는 실제 DB에서 쿼리로 조회를 해오는 것이고 getReference는 DB조회를 미루는 가짜(프록시) 엔티티 객체를조회한다. 결론적으로 DB에 쿼리가 안나갔는데 객체가 조회가 된다. 
+
+```
+Member member = new Member();
+member.setUsername("hello");
+em.persist(member);
+
+em.flush(); // SQL저장소 비움, DB와 동기화 1차캐시는 존재함
+em.clear(); // 영속성 컨텍스트를 모두 비운다. 초기화
+
+Member findMember = em.find(Member.class, member.getId());
+System.out.println("findMember.id = " + findMember.getId());
+System.out.println("findMember.username = " + findMember.getUsername());
+```
+
+위 코드에서는 DB를 조회해서 값을 가져온다. 그런데
+
+```
+Member member = new Member();
+member.setUsername("hello");
+em.persist(member);
+
+em.flush(); // SQL저장소 비움, DB와 동기화 1차캐시는 존재함
+em.clear(); // 영속성 컨텍스트를 모두 비운다. 초기화
+
+Member findMember = em.getReference(Member.class, member.getId()); // 프록시
+System.out.println("findMember.id = " + findMember.getId());
+System.out.println("findMember.username = " + findMember.getUsername()); // 여기서 쿼리가 날아감, getUsername이 없어서
+```
+
+위 코드는 DB조회가 아닌 프록시를 통해 객체를 가져왔다. 다만 `em.getReference()`를 할때는 쿼리가 나가지않고
+`System.out.println`를 통해 값을 실제로 사용할 때는 쿼리가 나가게 된다.
+
+`em.getReference();`를 하면 하이버네이트가 자신 내부의 라이브러리를 사용해서 프록시(가짜 객체)를 준다.
+내부에는 `Entity 타입의 target 변수`가 있는데 target이 실제 엔티티의 참조를 보관한다. 프록시는 실제 엔티티를 상속받아서 프록시객체를 만든다.
+프록시객체에 getName을 한다고 치면 Entity의 name을 조회하게 되는것이다
+
+<br>
+
+![JPA 프록시 객체 초기화](../images/prox%20init.png)
+
+개발자가 프록시객체에 getName()을 호출하면 프록시 객체의 target값이 처음엔 null이게 된다, 이때 프록시객체가 영속성컨텍스트에 요청을 하게되고
+영속성 컨텍스트는 DB를 조회해서 실제 Entity를 생성한다. 그리고 실제 생성된 Entity객체의 참조를 프록시객체에 target에 연결시킨다.
+그리고 실제 생성된 실제 엔티티의 getName()의 결과를 가져오게 되는것이다.
+
+즉, 프록시 객체에 없는값을 사용하게되면 영속성 컨텍스트에 초기화 요청을해서 DB조회후 Entity생성하고 참조값을 프록시객체의 target에 연결한다.
+이 매커니즘은 JPA의 표준에는 없기때문에 하이버네이트가 구현하는 것이고 구현체가 무엇이냐에 따라 변할 수 있으나 큰 맥락은 비슷할 것이다.
+
+#### 프록시의 특징
+1. 프록시 객체는 처음 사용할 때 한번만 초기화
+2. 프록시 객체를 초기화 할 때, 프록시 객체가 실제 엔티티로 바뀌는 것은 아님, 초기화되면 프록시 객체를 통해서 실제 엔티티에 접근가능 (target이 채워질 뿐이다.)
+3. 프록시 객체는 원본 엔티티를 상속받음, 따라서 타입 체크시 주의해야함 (== 비교 실패, 대신 instance of 사용)
+4. 영속셍 컨텍스트에 찾는 엔티티가 이미 있으면 em.getReference()를 호출해도 실제 엔티티를 반환 
+5. 영속성 컨텍스트의 도움을 받을 수 없는 준영속 상태일 때 프록시를 초기화하면 문제가 발생한다.
+
+#### 3번특성 프록시의 == 비교 예제
+```
+Member member1 = new Member();
+Member member2 = new Member();
+
+Member m1 = em.find(Member.class, member1.getId());
+Member m2 = em.find(Member.class, member2.getId());
+
+System.out("result : " + m1.getClass() == m2.getClass()) // true
+```
+위 프록시특징에 대해 적혀있듯 프록시객체는 실제엔티티를 상속받은 것이기 때문에 == 비교를 통해 타입을 비교하면 안된다.
+위에 코드는 true값이 나오겠지만 만약 m2가 find가 아닌 getReference()로 가져오면 false가 나온다.
+그냥 보면 알지않냐 라고 생각할 수 있으나 실제 실무코드에서는 비교를 위한 로직을 통해 비교할텐데 프록시객체가 올지 실제 Entity 객체가올지 알수없기에 instans of로 비교해야한다.
+
+```
+Member member1 = new Member();
+Member member2 = new Member();
+
+Member m1 = em.find(Member.class, member1.getId());
+Member m2 = em.find(Member.class, member2.getId());
+
+System.out("m1 instanceof = " + (m1 instanceof Member));
+System.out("m2 instanceof = " + (m2 instanceof Member));
+```
+
+이런식으로 `instanceof`를 사용해야 한다.
+
+<br>
+
+#### 4번특성 이미있는 영속성 컨텍스트 예제
+
+```
+Member member1 = new Member();
+em.persist(member1);
+
+em.flush();
+em.clear();
+
+Member m1 = em.find(Member.class, member1.getId());
+System.out.println("m1 = " + m1.getClass()); // 실제 Entity 객체가 나온다.
+
+Member reference = em.getReference(Member.class, member1.getId());
+System.out.println("reference = " + reference.getClass()); // 프록시가 아닌 실제 Entity 객체가 나온다. 이미 영속성 컨텍스트에 있기때문에
+```
+
+위 코드를 보면 처음 em.find()로 DB에서 값을 조회해서 영속성컨텍스트에 이미 값이 올라와 있기 때문에 reference 변수는 `em.getReference()`를 통해 프록시객체를
+가져왔음에도 실제 Entity객체가 들어가있게 된다. JPA에서는 같은 트랜잭션 레벨안에서 혹은 같은 영속성 컨텍스트 안에서 ==비교를 할 때 true라는 값이 나오야 한다. 그렇기에
+영속성 컨텍스트에 1차캐시에 올라가 있기 때문에 원본을 반환하고 자바컬렉션에서 값을 가져오면 항상 true를 반환하듯 같은 트랜잭션단위에서 find로 가져오든 getReference로 프록시에서 가져오더라도 동일성을 보장하기위해 실제 엔티티를 가져온다.
+그런데 특이한 점은 처음 조회할때 find로 조회하면 같은트랜잭션인 상황에서 레퍼런스로 조회해도 실제엔티티로 조회한다. 반대로 처음 프록시로 조회하면 나중에 find로 조회해도 프록시로 반환한다. 동일성을 보장하기 위함이다.
+
+즉, find()로 먼저 조회하면 getReference()로 조회해도 Entity객체가 반환되고
+getReference()로 먼저 조회하면 find()로 조회해도 프록시로 반환하게 된다.
+
+#### 5번 준영속 상태에서 초기화하면 오류발생
+```
+Member member1 = new Member();
+member1.setUsername("member1");
+em.persist(member1);
+
+em.flush();
+em.clear();
+
+Member refMember = em.getReference(Member.class, member.getId()); // 프록시 객체 가져옴
+
+em.detach(refMember); // 준영속 상태로 바꿈 (영속성 컨텍스트에서 레퍼런스멤버를 탈락시킴)
+
+refMember.getUsername(); // 없던값 조회로 DB쿼리 날려야 하는데 초기화를 못함
+
+```
+
+위 코드를 살펴보자 member를 생성하고 clear()로 영속성컨텍스트가 비워진 상태에서 프록시객체를 만들었다.
+그런데 문제는 getUsername()을 통해 1차 캐시에 없던 값을 가져오려고 했기 때문에 프록시객체는 영속성 컨텍스트의 도움을 받아
+DB를 조회하고 실제 Entity를 만들고 target에 참조값을 저장해야 하는데 준영속 상태로 만들어버려서 초기화를 진행하지 못하는 에러가 발생하는 것이다.
+em.close()를 통해 엔티티 매니저를 닫아버려도 똑같은 문제가 발생하게 된다.
+
+`em.detach()`는 특정 객체를 JPA 영속성 컨텍스트에서 관리하지 않게 탈락시키는 것이고 `em.clear()`는 영속성 컨텍스트의 내용을 완전히 비우는 행위이다. `em.close()`는 엔티티 매니저를 종료하는 것이므로
+3가지 상황에서 모두 영속성 컨텍스트가 없어지게 되는점이다.
