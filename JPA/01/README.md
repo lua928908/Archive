@@ -639,7 +639,7 @@ member Entity에 `setTeam()`을 하면 원래는 그냥 `this.team = team;` 부�
 논리모델을 3가지의 물리모델로 구현해낼 수 있다.
 1. 조인전략 : 부모테이블과 자식테이블을 만들어 PK와 FK로 `JOIN`을 통해 값을 가지고 오는 형태이다.
 2. 단일테이블 전략 : 1개의 테이블에 값을 모두 때려박고 `DTYPE` 같은 컬럼을 통해 데이터를 구분한다, 성능때문에 이런 심플한 방식의 구현을 선호하는 경우도 있다고 한다. DB는 1개인데 실제 객체는 상속관계로 구현되어 있을수도 있다.
-3. 구현 클래스마다 테이블 전략 : 구현하는 `class`마다 1:1 매핑하듯 `table`을 만들어 주는 것이다. 부모에서 부터 공통된 값을 상속받는게 아니라 그냥 각 table마다 필요한 값을 다 가지고 있는것이다. 다소 중복이 발생하지만 가장 직관적인 방식이다.
+3. 구현 클래스마다 테이블 전략 : 구현하는 `class`마다 1:1 매핑하듯 `table`을 만들어 주는 것이다. 부모에서 부터 공통된 값을 상속받는게 아니라 그냥 각 table마다 필요한 값을 다 가지고 있는것이다. 다소 중복이 발생하지만 가장 직관적인 방식이다. 다만 값을 넣고 쓰는정도만 사용하면 상관이없는데 id만 알고 어느 테이블인지 모르는 경우라면 부모타입으로 조회할때 union을 통해 DB를 전부 뒤져야하기 때문에 find할때 비효율적일 수 있다. 이 전략은 ORM과 DB전문가가 둘다 비추천하는 전략이고 결과적으로 실무에서 쓰면 안되는 전략이다.
 
 위 3가지 방식중 무엇을 사용하든 JPA는 다 매핑을 하도록 지원을 한다.
 JPA 에서 기본으로 제공하는 전략은 `single table` 전략으로 한테이블에 다 때려박는 전략을 기본으로 채택하고 있다.
@@ -683,3 +683,66 @@ em.persist(book);
 author는 자식에 들어가는데 대신 컬럼에 PK와FK를 가지고 있게된다 PK와FK가 같은 값이된다.
 
 나중에 find로 값을 가져올때에도 알아서 JPA가 INNER JOIN을 통해 값을 가져온다. 매핑을 잘하면 이렇게 편하게 사용할 수 있게 된다.
+
+부모 엔티티에 `@DiscriminatorColumn`라는 어노테이션을 넣어주면 값을 넣을 때, 어느 객체가 나를 extends 해서 insert를 했는지 구분자를 넣어준다.
+운영을 할때는 insert 쿼리만보고 어느 객체에서 insert가 실행된건지 알수 없지만 DTYPE을 넣어주는 `@DiscriminatorColumn` 어노테이션을 붙이면
+훨씬 관리가 쉬워지므로 안넣어도 상관없지만 넣는것을 추천한다.
+
+#### 주요 어노테이션
+
+* `@Inheritance(strategy = InheritanceType.XXX)`
+    * JOINED : 조인 전략
+    * SINGLE_TABLE : 단일 테이블 전략
+    * TABLE_PER_CLASS : 구현 클래스마다 테이블 전략
+* `@DiscriminatorColumn(name = "DTYPE")` 부모Entity 객체에, 데이터 구분자의 이름을 지정할 수 있다.
+* `@DiscriminatorValue("XXX")` 자식Entity 객체에, 각 지식테이블 별 이름을 지정할 수 있다. (기본값은 엔티티객체의 이름)
+
+<br>
+
+#### Mapped Superclass - 매핑 정보 상속
+예를들어 모든 db에 생성일, 수정일이 기록되어야 한다면 우리는 모든 Entity 클래스에 `private LocalDateTime createData;` 과 같은 속성을 넣어
+생성시간을 입력해주어야 할것이다. 이걸 모든 테이블에 다 넣어주려면 관리의 문제나 추후 변경될 가능성에 대해 신경쓰일 것이다.
+이럴때 특정 값을 상속받아 사용하기 위한것이 `Mapped Superclass`어노테이션이다.
+
+```
+@MappedSuperclass
+public abstract class BaseEntity {
+    private String createBy;
+    private LocalDateTime createDate;
+    private String lastModifiedBy;
+    private LocalDateTime lastModifiedDate;
+
+    ... getter and setter
+}
+```
+
+위 처럼 BaseEntity라는 중복되는 속성을 관리하는 부모엔티티를 만들고 `@MappedSuperclass`어노테이션을 붙여서 이 엔티티는 상속해주기 위한 엔티티라는 것을 명시한다.
+
+```
+@Entity
+public class member extends BaseEntity{
+    @Id
+    @GeneratedValue
+    private Long id
+
+    private String username;
+
+    ....
+}
+```
+
+위 처럼 Member라는 엔티티가 BaseEntity 라는 엔티티를 extends 하게 하면 부모엔티티에 있는 등록한사람, 등록시간, 수정한사람, 수정시간 같은 정보를
+상속받아 가지고있을 수 있게 된다.
+
+누가 등록/수정을 했는지 필요하기 때문에 넣는것을 추천한다 MappedSuperclass는 상속매핑이나 엔티티가 아니라
+그냥 부모객체에 값을 자식엔티티에서 상속해서 관리하기 위한것이기 때문에 부모속성으로 조회할 수 없다.
+즉, `em.find(BaseEntity.class, member.getId())` 이런 식으로 부모클래스를 가지고 조회하는것이 불가능하다는 뜻이다.
+
+또한 직접 생성해서 사용할 일이 없으므로 추상클래스(abstract)로 만들기를 권장한다. 어차피 직접사용하지않고
+자식클래스가 상속을 받아 사용되기 때문이다.
+
+#### MappedSuperclass 정리
+
+* 테이블과 관계가 없고, 단순히 엔티티가 공통으로 사용하는 매핑정보를 모으는 역할이다
+* 주로 등록일, 수정일, 등록자, 수정자 같은 전체 엔티티에서 공통으로 사용하는 정보를 모을 때 사용된다
+* `@Entity`클래스는 엔티티나 `@MappedSuperclass`로 지정한 클래스만 상속가능하다. 즉, 부모객체에 `@MappedSuperclass` 또는 `@Entity` 어노테이션이 있어야만 자식객체가 extends를 해서 부모객체에 정보를 상속할 수 있다는 뜻이다.
