@@ -905,3 +905,102 @@ em.close()를 통해 엔티티 매니저를 닫아버려도 똑같은 문제가 
 
 `em.detach()`는 특정 객체를 JPA 영속성 컨텍스트에서 관리하지 않게 탈락시키는 것이고 `em.clear()`는 영속성 컨텍스트의 내용을 완전히 비우는 행위이다. `em.close()`는 엔티티 매니저를 종료하는 것이므로
 3가지 상황에서 모두 영속성 컨텍스트가 없어지게 되는점이다.
+
+<br>
+
+## 즉시 로딩과 지연 로딩
+
+프록시 에서 살펴보았듯 Member 객체를 조회할때 Team 객체까지 관계가 걸려있다고해서 무조건 가져온다면
+member만 사용하는 상황에서는 join하지 않아도 되는 테이블값이 전달되니 손해다. 이런문제를 해결하기 위해
+지연로딩을 사용한다.
+
+```
+@Entity
+public class Member{
+    @Id
+    @GeneratedValue
+    private long id; 
+
+    @Column(name = "USERNAME")
+    private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY) // fetc속성으로 지연로딩 설정
+    @JoinColumn(name = "TEAM_ID")
+    private Team team;
+}
+```
+member 객체에 fetch속성을 통해 지연로딩을 설정했다.
+
+```
+Team team = new Team();
+team1.setName("team1");
+em.persist(team);
+
+Member member1 = new Member;
+member1.setUsername("member1");
+member1.setTeam(team);
+em.persist(member1);
+
+em.flush();
+em.clear();
+
+Member m = em.find(Member.class, member1.getId());
+System.out.println("m = " + m.getTeam().getClass()); // 프록시를 가지고 있음
+
+System.out.println("==================");
+m.getTeam().getName(); // 실제 값을 가져온다. 
+System.out.println("==================");
+```
+
+위 코드에서 `System.out.println`으로 find에서 가져온 멤버의 팀을 찍어보면 프록시가 들어오게된다.
+멤버를 파인드한 m 객체는 엔티티객체 이지만 m객체의 team은 프록시로 가지고 있는것이다.
+
+그리고 실제 team의 값을 가져오는 행위를 할 때, 프록시의 target을 가지고 실제Entity의 값을 가져오는 것이다. (프록시객체가 엔티티객체로 바뀌는것은 아니다 그냥 값을 가져올 뿐)
+
+<br>
+
+```
+@Entity
+public class Member{
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "TEAM_ID");
+
+}
+```
+
+그런데 대부분의 상황에서 멤버와 팀을 함께사용하는 형태라면 계속 네트워크를 2번씩 타서 쿼리를 날릴것이다.
+오히려 성능에 악영향을 미친다, 이런경우 즉시로딩을 하게 만들 수 있다.
+`@ManyToOne(fetch = FetchType.EAGER)` 타입을 EAGER 라는 값으로 변경하면 된다.
+ 
+#### 프록시와 즉시로딩 주의
+
+실무에서는 즉시로딩을 쓰면안된다고 한다. 해외프랙티스 가이드나 자료를 찾아보면 가급적 지연로딩만 사용할 것을 추천한다고 한다.
+
+* 가급적 지연 로딩만 사용(특히 실무에서)
+* 즉시 로딩을 적용하면 예상하지 못한 SQL이 발생
+* 즉시 로딩은 JPQL에서 N+1 문제를 일으킨다.
+* `@ManyToOne`, `@OneToOne`은 기본이 즉시로딩 이므로 LAZY로 바꿔줘야 한다.
+* `@OneToMany`, `@ManyToMany`는 기본이 지연 로딩
+
+<br>
+
+#### 예상하지 못한 SQL이 발생
+만약 member가 team 1개뿐만 아니라 10개의 테이블과 관계가 맺어져 있다면
+즉시로딩으로 인해 10개의 테이블에 쿼리를 날리게 된다. 그럼 find할때 무조건 join이 다 날라가게 된다.
+작은 프로젝트는 성능이라는 것을 고민할 자체가 적다. 하지만 어플리케이션이 거대해지면 전혀 다른 차원에 문제가 된다.
+
+#### JPQL에서 N+1 문제를 일으킨다.
+```
+List<Member> members = em.createQuery("select m from Member m", Member.class).getResultList();
+```
+위에 JPQL을 실행해보면 쿼리가 2번나가게 된다.(EAGER로 설정된 경우만)
+em.find를 할때는 PK를 가지고 가져오기떄문에 JPA에서 최적화가 가능해진다. 그런데 JPQL이라는 것은 문자그대로 SQL 쿼리를 날리게 된다.
+member를 가지고 올때 team이 즉시로딩이 걸려있으면 가져올때 값이 모두 담겨있어야 하는것이다. 그래서 쿼리가 2번 나가게 된다. 문제는 멤버마다 각각 다른 팀을 가지고 있으면 다른 팀 갯수만큼 조인이 추가로 나간다.
+ 
+이것은 해결하기위해
+1. LAZY로 변경
+2. JPQL 쿼리문에 `join fetch`을 통해 멤버와 팀을 같이 사용해야 되는 경우 한번에 가져오게 한다.
+3. 메소드에 `@EntityGraph` 어노테이션을 달아주기
+
+등등이 있다.
