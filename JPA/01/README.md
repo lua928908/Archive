@@ -1004,3 +1004,134 @@ member를 가지고 올때 team이 즉시로딩이 걸려있으면 가져올때 
 3. 메소드에 `@EntityGraph` 어노테이션을 달아주기
 
 등등이 있다.
+
+<br>
+
+## 영속성 전이(CASCADE)와 고아 객체
+영속성 전이는 부모객체가 영속성에 추가될때 자식객체도 자돋으로 영속성에 추가되게끔 하는 것이다.
+프록시나 즉시로딩,지연로딩과는 전혀 관계가 없는 별개의 주제인데 오해하는 경우가 많다.
+
+<br>
+
+__중요한 코드만 작성하고 그외 필드나 getter,setter같은 코드는 생략하였다.__
+```
+@Entity
+public class Parent{
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @OneToMany(mappedBy = "parent")
+    private List<Child> childList = new Array<>();
+
+    public void addChild(Child child){ // 편의 메서드
+        childList.add(child);
+        child.setParent(this);
+    }
+}
+```
+
+부모 엔티티가 List로 childList를 가지고 있다.
+
+```
+@Entity
+public class Child{
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private Parent parent;
+
+    public void addChild
+}
+```
+
+자식이 Owner이고 자식도 부모객체를 가지고 있다.
+
+```
+Child child1 = new Child();
+Child child2 = new Child();
+
+Parent parent = new Parent();
+parent.addChild(child1);
+parent.addChild(child2);
+
+em.persist(parent);
+em.persist(child1);
+em.persist(child2);
+```
+
+원래는 이런식으로 persist가 3번 호출되어야 할것이다. 부모와 자식을 다 생성해주어야 하니까
+그런데 영속성전이를 사용해 부모엔티티가 persist되면 자식도 persist가 되게 할 수 있다는 것이다.
+
+```
+@Entity
+public class Parent{
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL) // 영속성전이 추가
+    private List<Child> childList = new Array<>();
+
+    public void addChild(Child child){ // 편의 메서드
+        childList.add(child);
+        child.setParent(this);
+    }
+}
+```
+
+`cascade = CascadeType.ALL`를 연관관계를 적는 어노테이션에 cascade를 추가했다.
+이렇게 변경하면 `em.persist(parent);`로 부모를 추가하면 자식도 자동으로 추가된다.
+
+#### CASCADE의 종류
+* ALL : 모두 적용
+* PERSIST : 영속
+* REMOVE : 삭제
+* MERGE : 병합
+* REFRESH : REFRESH
+* DETACH : DETACH
+
+실제로는 all, persist 정보만 사용한다. 영속성 전이는 연관관계를 매핑하는것과는 아무 고나련이 없다
+엔티티를 영속화할 때 연관된 엔티티도 함께 영속화하는 편리함을 제공하는 것이 전부다.
+하나의 부모에서 자식을 관리하는 경우에 유용하다. 게시판 같은 경우가 유용하다.
+
+<br>
+
+#### 고아객체
+
+부모 엔티티와 연관관계가 끊어진 자식 엔티티를 자동으로 삭제하는 것이다.
+
+``````
+@Entity
+public class Parent{
+   @Id
+   @GeneratedValue
+   private Long id;
+
+   @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true) // 고아객체를 삭제하는 속성 추가
+   private List<Child> childList = new Array<>();
+
+   public void addChild(Child child){ // 편의 메서드
+       childList.add(child);
+       child.setParent(this);
+   }
+}
+``````
+
+`orphanRemoval = true`를 추가하면 부모엔티티의 컬렉션에 삭제되면 DB의 값도 삭제되게 된다.
+
+```
+Parent findParent = em.find(Parent.class, parent.getId());
+findParent.getChildList().remove(0); // orphanRemoval 동작
+```
+부모 엔티티에서 자식컬렉션중 0번째를 삭제하면 컬렉션에서만 지워지는게 아니라 실제 delete 쿼리가
+날라가면서 DB에서 삭제되게 된다.
+
+참조가 제거된 엔티티는 다른 곳에서 참조하지 않는 고아 객체로 판단하고 삭제하는 기능이다.
+영속성 전이와 고아객체를 관리하는 옵션을 모두 사용하게되면 결과적으로 도메인 주도 설계의 Aggregate Root 개념을 구현할 때 유용하다
+즉, 부모엔티티를 가지고 자식엔티티의 샐명주기를 관리하는것이 가능해지는 것이다.
+<br>
+
