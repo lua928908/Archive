@@ -1133,5 +1133,81 @@ findParent.getChildList().remove(0); // orphanRemoval 동작
 참조가 제거된 엔티티는 다른 곳에서 참조하지 않는 고아 객체로 판단하고 삭제하는 기능이다.
 영속성 전이와 고아객체를 관리하는 옵션을 모두 사용하게되면 결과적으로 도메인 주도 설계의 Aggregate Root 개념을 구현할 때 유용하다
 즉, 부모엔티티를 가지고 자식엔티티의 샐명주기를 관리하는것이 가능해지는 것이다.
+
 <br>
 
+## 값 타입
+
+#### JPA의 데이터 타입 분류
+
+* 엔티티 타입
+    * @Entity로 정의하는 객체
+    * 데이터가 변해도 식별자로 지속해서 추적 가능하다.
+    * 예) 회원 티티의 키나 나이 값을 변경해도 식별자로 인식이 가능하다.
+    
+* 값 타입
+    *  int, Integer, String 처럼 단순히 값으로 사용하는 자바 기본 타입이나 객체
+    * 식별자가 없고 값만 있으므로 변경시 추적이 불가능하다.
+    * 예) 숫자 100을 200으로 변경하면 완전히 다른 값으로 대체 되버린다.
+    
+JPA에는 최상위에 엔티티 타입과 값 타입이 있다.
+그리고 값타입 안에는 기본값 타입, 임베디드 타입, 컬렉션 값 타입으로 나뉘어진다.
+
+<br>
+
+#### 임베디드 타입(복합값 타입)
+
+* 새로운 값 타입을 직접 정의할 수 있음
+* JPA는 임베디드 타입(embedded type) 이라 부른다.
+* 주로 기본 값 타입을 모아서 만들어서 복합 값 타입이라고도 부름
+* int, String과 같은 값 타입이다. 엔티티 타입이 아니라서 변경하면 그냥 끝이다.
+
+예를들어 member객체에 집주소, 우편주소, 번지수, 시작일, 종료일 같은 내용이 담겨있다고 할때
+[집주소,우편주소,번지수] 를 homeAddress 라는 하나의 객체로 묶고 [시작일,종료일]을 workPeriod라는 객체로 묶어준다.
+그럼 좀더 의미적으로 객체지향적인 관리가 이루어지게 될것이다. 그리고 따로 빼준 객체에 `@Embeddable`을 넣어주고
+함축어되어 있는 객체 필드에 `@Embedded` 어노테이션을 붙여주면 된다.
+
+<br>
+
+Member 객체
+```
+@Entity
+public class Member{
+    @Id
+    @GeneratedValue
+    @Column(name = "MEMBER_ID")
+
+    @Column(name = "USERNAME")
+    private String username;
+
+    //기간 Period
+    @Enbedded
+    private Period workPeriod;
+
+    //주소
+    @Enbedded
+    private Address homeAddress;
+}
+```
+
+Period 객체
+```
+@Embeddable
+public class Period{
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+}
+```
+
+Address 객체
+```
+@Embeddable
+public class Address{
+    private String city;
+    private String street;
+    private String zipcode;
+}
+```
+
+위 내용처럼 엔티티의 내용중 응집력을 가져야할 내용들을 따로 빼내서 객체로 만들어주고
+따로 빼낸 객체에 `@Embeddable` 빼놓은 객체를 가져다쓸 엔티티에  `@Enbedded` 어노테이션을 붙여주면 된다.
