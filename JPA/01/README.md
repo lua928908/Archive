@@ -1211,3 +1211,89 @@ public class Address{
 
 위 내용처럼 엔티티의 내용중 응집력을 가져야할 내용들을 따로 빼내서 객체로 만들어주고
 따로 빼낸 객체에 `@Embeddable` 빼놓은 객체를 가져다쓸 엔티티에  `@Enbedded` 어노테이션을 붙여주면 된다.
+
+<br>
+
+#### 값 타입과 불변 객체
+
+값 타입은 복잡한 객체 세상을 조금이라도 단순화 하려고 만든 개념이다. 따라서 값 타입은 단순하고 안전하게 다룰 수 있어야 한다.
+
+```
+Address address = new Address(city, street, 1000);
+
+Member member = new Member();
+member.setUsername("member1");
+member.setHomeAddress(address);
+em.persist(member);
+
+Member member2 = new Member();
+member2.setUsername("member2");
+member2.setHomeAddress(address);
+em.persist(member2);
+
+member.getHomeAddress().setCity("newCity"); // 첫번째 멤버만 바꾸려 했는데 참조관계로 모두 바뀜
+```
+
+위 코드처럼 멤버1과 멤버2를 만든다. 그런데 맨밑에 첫번째 멤버의 homeAddress의 city를 변경하려고할때
+의도치 않게 모두 변경되는 문제가 발생한다. 이런식의 사이드 이펙트에서 발생하는 버그현상은 잡아내기 굉장히 어렵다.
+member를 만드는행위는 계층에서 이루어지고 비즈니스 로직도중에 member의 값을 바꾸는 행위를 했는데 의도치않게 다른 모든 멤버의 값이 변경되는 오류가 발생할 수 있다.
+
+임베디드 타입 같은 값 타입을 여러 엔티티에서 공유하면 위험하다.
+
+
+```
+Address address = new Address(city, street, 1000);
+
+Member member = new Member();
+member.setUsername("member1");
+member.setHomeAddress(address); // 여기에선 그냥 address를 삽입
+em.persist(member);
+
+Address copyAddress = new Address(address.getCity(), address.getStreet(), address.getZipcode());
+
+Member member2 = new Member();
+member2.setUsername("member2");
+member2.setHomeAddress(copyAddress); // 복사한 copyAddress를 삽입
+em.persist(member2);
+```
+
+이런 식으로 address를 그냥 넣는게 아니라 복사를 해서 값을 사용해야 한다.
+
+#### 객체 타입의 한계 및 불변객체 
+* 항상 값을 복사해서 사용하면 공유 참조로 인해 발생하는 부작용을 피할 수 있다. (하지만 누군가 실수로 복사를 안하고 그냥 값을 넣는다면 막을 방법이 없다.)
+* 문제는 임베디드 타입처럼 직접 정의한 값 타입은 자바의 기본 타입이 아니라 객체 타입이다. (원시데이터가 아닌 객체는 = 으로 대입하면 무조건 참조관계가 되는데 이걸 == 비교하면 true가 나올 수가 없다.)
+* 결과적으로 객체는 = 으로 넣으면 다 대입이 가능해서 공유참조를 피할 수 없다. (기본타입을 primitive type 이라고 부름, 자바스크립트의 원시 데이터)
+* 애초에 불변객체, 즉 변경이 불가능한 객체로 만들어버린다. 생성 시점 이후에 값을 변경하는게 불가능한 객체로 만들어버려야 한다.
+* 애초에 값을 생성자로만 삽입하고 setter를 만들지 않으면 된다.
+* Integer, String은 자바가 제공하는 대표적인 불변 객체 이다.
+
+#### 값 타입의 비교
+
+값타입의 비교에서는 인스턴스가 달라도 그안에 값이 같으면 같은 것으로 봐야한다.
+```
+int a = 10;
+int b = 10;
+
+System.out.println("boolean = " + a==b); // true
+```
+기본값은 비교하면 트루가 나오지만
+
+```
+Address a = new Address("서울");
+Address b = new Address("서울");
+
+System.out.println("boolean = " + a==b); // false
+```
+주소같은 경우에는 값이 같지만 객체비교는 인스턴스가 달라서 참조값이 다르기 때문에 false로 나온다.
+
+<br>
+
+이런 부분때문에 동일성 비교와 동등선 비교를 구분해야 한다.
+
+* 동일성 (identity )비교 : 인스턴스의 참조 값을 비교, == 사용
+* 동등성 (equivalence) 비교 : 인스턴스의 값을 비교, equals() 사용
+* 값 타입은 `a.equanls(b)`를 사용해 동등성을 비교해야 한다.
+* 값 타입의 equals() 메소드를 적절하게 재정의 해야한다. (주로 모든 필드 사용)
+
+equals 메소드가 기본비교가 == 비교이므로 `@Override`를 해서 사용해야한다. 오버라이드할때 IDE에서 기본으로 만들어주는 equals를 사용하면 된다.
+euqlas를 오버라이드로 구현할 때는 hashCode 메서드로 만들어 주어야한다. 그래야 hash를 사용하는 hashMap이나 자바 컬렉션에서 효율적으로 사용할 수 있다.
