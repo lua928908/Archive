@@ -1,5 +1,13 @@
 ## 로맨틱한 JPA
 
+```
+해당 내용은 대부분이 김영한님의 '자바 ORM 표준 JPA 프로그래밍 - 기본편' 강의 내용을
+필자가 다시 리마인드하며 편하게 공부하기 위해 정리한 것에 불과하다.
+
+김영한 님의 '자바 ORM 표준 JPA 프로그래밍' 도서와 '자바 ORM 표준 JPA 프로그래밍 - 기본편' 인프런 강으에
+훨씬 자세하고 디테일한 설명들이 들어있다, 돈이 아깝지 않은 강의 이므로 보길 추천한다.
+```
+
 <br>
 <br>
 
@@ -1008,7 +1016,7 @@ member를 가지고 올때 team이 즉시로딩이 걸려있으면 가져올때 
 <br>
 
 ## 영속성 전이(CASCADE)와 고아 객체
-영속성 전이는 부모객체가 영속성에 추가될때 자식객체도 자돋으로 영속성에 추가되게끔 하는 것이다.
+영속성 전이는 부모객체가 영속성에 추가될때 자식객체도 자동으로 영속성에 추가되게끔 하는 것이다.
 프록시나 즉시로딩,지연로딩과는 전혀 관계가 없는 별개의 주제인데 오해하는 경우가 많다.
 
 <br>
@@ -1297,3 +1305,98 @@ System.out.println("boolean = " + a==b); // false
 
 equals 메소드가 기본비교가 == 비교이므로 `@Override`를 해서 사용해야한다. 오버라이드할때 IDE에서 기본으로 만들어주는 equals를 사용하면 된다.
 euqlas를 오버라이드로 구현할 때는 hashCode 메서드로 만들어 주어야한다. 그래야 hash를 사용하는 hashMap이나 자바 컬렉션에서 효율적으로 사용할 수 있다.
+
+#### 값 타입 컬렉션
+
+값 타입을 List, Set, Map 과 같이 컬렉션으로 사용하는 것을 값 타입 컬렉션이라고 한다.
+
+```
+@Entity
+public class Mameber{
+    @Id
+    @GeneratedValue
+    @Column(name = "MEMBER_ID")
+
+    @Column(name = "USERNAME")
+
+    @Embedded
+    private Address homeAddress;
+
+    @EmementCollection // 값타입 컬렉션인 경우 적어야 하는 어노테이션
+    @CollectionTable(name = "FAVORITE_FOODS", joinColumns = @JoinColumn(name = "MEMBER_ID")) // FAVORITE_FOODS라는 테이블과 매핑해서 컬렉션으로 저장한다, join이 필요한경우 @JoinColumn 사용
+    private Set<String> favoriteFoods = new HashSet<>();
+
+    @EmementCollection
+    @CollectionTable(name = "ADDRESS", joinColumns = @JoinColumn(name = "MEMBER_ID"))
+    private List<Address> addressHistory = new ArrayList<>();
+}
+```
+
+위와 같이 값타입 컬렉션을 사용하면 된다. `@Embedded`의 경우 필드를 연관된 것 끼리 묶어주기 위해 사용했다.
+`@EmementCollection`과 `@CollectionTable` 같은 경우는 컬렉션으로 들어가는 값을 별도의 DB 테이블로 만들어 관리하는 것이고 그렇게 분리된
+테이블의 값을 값 타입 컬렉션으로 매핑하는 것이다.
+
+* 값 타입을 하나 이상 저장할 때 사용한다.
+* `@ElementCollection`과 `@CollectionTable`를 사용해 설정하면 돤다.
+* 데이터베이스는 컬렉션을 같은 테이블에 저장할 수 없다. (엔티티의 일반 필드와 컬렉션 값 타입을 같이 담을 수 없다는 뜻이다, 별도의 테입르이 필요하므로 join 키가 필요하게 된다.)
+* 컬렉션을 저장하기 위한 별도의 테이블이 필요하다.
+
+```
+Member member = new Member();
+member.setUsername("member1"); // 일반 필드 값 채우기
+member.setHomeAddress(new Address("homeCity, "street, "1000")); // Embedded 필드 값 채우기, 참조를 막기위해 new로 생성
+
+member.getFavoriteFoods().add("치킨"); // get으로 가져와 컬렉션 다루듯이 add로 삽입한다. 
+member.getFavoriteFoods().add("족발");
+member.getFavoriteFoods().add("피자");
+
+member.getAddressHistory().add(new Address("old1", "street", "500")) // 참조관계를 막기위해 new로 생성해서 넣었다.
+member.getAddressHistory().add(new Address("old2", "street", "500"))
+
+em.persist(member);
+```
+
+`em.persist(member);`를 할때 `addressHistory`와 `favoriteFoods`는 컬렉션 값 타입 이여서 별도의 DB 테이블로 관리한다고 했다.
+그런데 member만 persist()했을 뿐인데 값이 자동으로 `FAVORITE_FOODS`와 `ADDRESS`테이블 에도 저장이 되게 된다. 라이프사이클이 하나의 엔티티로 관리가 된다.
+
+엔티티 안에 들어있는 값 타입 컬렉션은 모두 지연로딩(LAZY)으로 동작한다. 실제 값을 조회하거나 변경하거나
+사용할 때 쿼리를 통해 값을 가지고 온다.
+
+<br>
+
+#### 값 타입 컬렉션의 값 수정
+
+```
+// homeCity 였던 값을 newCity로 바꾸고 싶은 상황
+
+Member findMember = em.find(Member.class, member.getId()) // 위에 생성된 객체가 있다고 치고
+findMember.getHomeAddress().setCity("newCity") // set으로 변경 시도
+```
+
+이렇게 하면 변경되지 않을까 생각할 수 있으나 이렇게 set으로 바꾸면 안된다, 값 타입은 immutable 해야되기 때문이다.
+
+```
+Member findMember = em.find(Member.class, member.getId())
+Address a = findMember.getHomeAddress(); // city만 바꾸고 나머지는 원래 기존값을 쓰고싶어서
+findMember.setHomeAddress(new Address("newCity", a.getStreet(), a.getZipcode())) // 새 인스턴스로 갈아끼움
+```
+setCity가 아닌 setHomeAddress를 통해 어드레스 객체를 새로 넣어주어야 한다, Address 객체의 인스턴스를 아예 새로 갈아끼워야 한다.
+
+```
+// 치킨을 한식으로 바꾸고 싶은 상황
+findMember.getFavoriteFoods().remove("치킨");
+findMember.getFavoriteFoods().add("한식");
+```
+
+set의 경우 아예 값을 지우고 넣어주어야 한다, 업데이트가 불가능한 상황이기도 하지만 업데이트를 하면 안되고 아예 값을 지우고 다시 넣어주어야 한다.
+
+그런데 문제는 값 타입 컬렉션은 변경사항이 발생하면 주인 엔티티와 관련된 모든 데이터를 삭제하고
+값 타입 컬렉션에 있는 현재 값을 모두 다시 저장한다.
+
+결과적으로 값 타입 컬렉션은 쓰면안된다, 극복할 수는 있으나 너무 복잡해진다 이렇게 어플리케이션이 복잡해지는 상황을
+피하기 위해서라도 다른방향으로 해결책을 풀어나가야 한다.
+
+#### 값 타입 컬렉션 대안
+* 실무에서는 상황에 따라 값 타입 컬렉션 대신에 일대다 관계를 만들길 고려한다. (값 타입 컬렉션으로 만들어서 `@ElementCollection`과 `@CollectionTable` 어노테이션으로 만들고 join을 하는등의 노력대신 그냥 Entity 클래스로 만들라는 뜻이다.)
+* 일대다 관계를 위한 엔티티를 만들고, 여기에서 값 타입을 사용 (1:N 관계 + 단방향으로 만들어서 관리)
+* 영속성 전이 + 고아 객체 제거를 사용해서 값 타입 컬렉션 처럼 사용
