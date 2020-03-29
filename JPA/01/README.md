@@ -1452,3 +1452,71 @@ JPA표준으로써 JPA Criteria가 있긴 하지만, 복잡한 쿼리에경우 �
 * 단순하고 쉽다.
 * 실무에서 사용하길 권장한다.
 
+<br>
+
+## JPQL 공부하기
+
+#### JPQL 문법
+* 엔티티와 속성은 대소문자를 구분한다. (Member, age) 엔티티는 앞글자가 대문자여야 한다.
+* JPQL 키워드는 대소문자를 구분하지 않는다. (SELECT, FROM, where)
+* 엔티티의 이름을 사용한다. 테이블의 이름이 아니다. (@Entity의 name값을 의미한다. 기본값은 table이름과 엔티티 객체이름이 동일함)
+* 별칭을 사용할땐 별칭을 적어주어야 하고 as는 생략할 수 있다. (어찌보면 당연한 얘기)
+
+#### 집합과 정렬
+```
+select
+    count(m), // 회원수
+    sum(m.age), // 나이 합
+    avg(m.age), // 평균 나이
+    max(m.age), // 최대 나이
+    min(m.age), // 최소 나이
+from Member m
+```
+기본적으로 ANSI표준 SQL에서 지원하는것들을 다 그대로 사용할 수 있다.
+
+#### TypeQuery, Query
+
+TypeQuery는 반환타입이 명확할 때 사용한다.
+Query는 타입 반환이 명확하지 않을 때 사용한다.
+
+```
+// 반환되는 타입이 Member라는게 명확한 상황
+TypedQuery<Member> query1 = em.createQuery("select m from Member m", Member.class);
+
+// 반환되는 타입이 username은 스트링이고 age는 인트인 상황
+Query query = em.createQuery("select m.username, m.age from Member m")
+```
+
+반환되는 결과물이 컬렉션이라면 `getResultList()`를 사용하면되고 컬렉션이 아니라면 `getSingleResult`를 사용하면 된다.
+다만, `getResultList()`는 만약 DB에서 조회한 결과물이 없으면 빈 컬렉션이 반환되기 때문에 크게 문제가없는데
+`getSingleResult`를 사용해서 하나의 결과물만 반환해야하는데 결과가 없으면 `javax.persistence.NoResultException`예외 처리에 걸린다.
+결과가 2개이상이면 `javax.persistence.NonUniqueResultException`예외가 발생한다. 딱 하나의 결과물만 반환하지 않으면 예외처리가 실행되는 것이다.
+
+값이 없다고 해서 예외처리가 되는것때문에 try, catch를 해야하는부분 때문에 논란이 있다고 한다. 그래서 `Spring Data JPA`를 사용하면 거기에선 아예 try,catch 처리가 되어있다고 한다.
+표준스펙에서는 1개가 아닌 상황에서는 예외처리가 되고 Spring Data JPA에서는 자동으로 null을 반환하게 처리되어있다.
+
+<br>
+
+#### 파라미터 넘겨주기
+
+```
+Member result = em.createQuery("select m from Member m where m.username = :username", Member.class)
+    .setParameter("username", "member1") // :username 이라고 파라미터로 받기로한 값을 set으로 설정해주었다.
+    .getSingleResult();
+
+System.out.println("singleResult = " + singleResult);
+```
+
+:username 으로 파라미터를 표기하고 setParameter를 통해 값을 전달한다.
+위치기반의 파라미터도 지원한다. 마치 Mybaties에서 param1, param2으로 사용하듯이 지원을 하긴하는데 비추한다.
+파라미터가 추가되면 순서가 다 밀리니까
+
+#### 프로젝션
+프로젝션이란 select절에서 조회할 대상을 지정하는 것을 의미한다.
+
+* 프로젝션 대상 : 엔티티, 임베디드 타입, 스칼라 타입(숫자, 문자등 기본 데이터 타입)
+* SELECT m FROM Member m -> 엔티티 프로젝션
+* SELECT m.team FROM Member m -> 엔티티 프로젝션 (멤버와 관련된 팀객체가 엔티티)
+* SELECT m.address FROM Member m -> 임베디드 타입 프로젝션 (이전 코드에서 Address라는 임베디드 값 타입을 만들고 `@Embedded`로 값을 넣었었으니까 임베디드 타입 프로젝션이 된다.)
+* SELECT m.username, m.age FROM Member m -> 스칼라 타입 프로젝션
+* DISTINCT로 중복 제거
