@@ -1520,3 +1520,56 @@ System.out.println("singleResult = " + singleResult);
 * SELECT m.address FROM Member m -> 임베디드 타입 프로젝션 (이전 코드에서 Address라는 임베디드 값 타입을 만들고 `@Embedded`로 값을 넣었었으니까 임베디드 타입 프로젝션이 된다.)
 * SELECT m.username, m.age FROM Member m -> 스칼라 타입 프로젝션
 * DISTINCT로 중복 제거
+
+<br>
+
+#### 페이징 API
+
+JPA에서의 페이징을 위한 API는 매우 쉽고 간결하며 아트의 경지다.
+
+* JPA는 페이징을 다음 두 API로 추상화
+* `setFirstResult`(int startPosition) 조회를 시작할 위치, 0부터 시작한다.
+* `setMaxResults`(int maxResult) 조회할 데이터 수
+
+이렇게 2가지 API로 페이징을 추상화 하였다.
+
+```
+List<Member> result = em.createQuery("select m from Member m order by m.age desc", Member.class)
+    .setFirstResult(0)
+    .setMaxResults(10)
+    .getResultList();
+
+System.out.println("result.size = " + result.size());
+for(Member member1 : result){
+    System.out.println("member1 = " + member1);
+}
+```
+
+위 코드처럼 어디서를 기준으로 몇개의 값을 가져올 것인지만 지정해주면 된다. 심플하고 명확하다.
+인간의 머리로 추상적인 작업만 채워주면 실질적인 쿼리의 구현체는 라이브러리가 알아서 해주는 것이다.
+
+<br>
+
+#### 조인(JOIN)
+* inner조인 : SELECT m FROM Member m JOIN m.team t
+* outer조인 : SELECT m FROM Member m LEFT JOIN m.team t 
+* 세타 조인 : SELECT count(m) from Member m, Team t where m.username = t.name
+
+
+세타조인의 경우 연관관계가 없는 것을 그냥 join 하게 된다.
+
+#### 조인 - ON 절
+* ON절을 활용한 조인 (JPA 2.1부터 지원한다, 과거버전이므로 대부분 JPA 2.1 이상이다.)
+    * 조인 대상은 on으로 필터링할 수 있다.
+    * 연관관계가 없는 엔티티를 외부조인 할 수 있다. (하이버네이트 5.1 부터, 마찬가지로 대부분 5.1 이상)
+
+예)
+```
+JPQL:
+SELECT m, t FROM Member m LEFT JOIN m.team t on t.name = 'A' // 팀이름이 a인 경우에서만 멤버와 팀을 join한다.
+
+SQL:
+SELECT m.*, t.* FROM Member m LEFT JOIN Team t on m.TEAM_ID=t.id and t.name='A' 
+```
+
+위 처럼 on을 통해 join할 대상을 필터링 하고나서 join을 할 수 있다.
