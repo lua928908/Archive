@@ -1573,3 +1573,31 @@ SELECT m.*, t.* FROM Member m LEFT JOIN Team t on m.TEAM_ID=t.id and t.name='A'
 ```
 
 위 처럼 on을 통해 join할 대상을 필터링 하고나서 join을 할 수 있다.
+
+<br>
+
+#### 서브쿼리
+JPA에서 일반 SQL 쿼리처럼 서브쿼리를 작성할 수 있다.
+
+```
+// 나이가 평균보다 많은 회원
+select m from Member m where m.age > (select avg(m2.age) from Member m2)
+
+// 한 건이라도 주문한 고객
+select m from Member m where (select count(o) from Order o where m = o.member) > 0
+```
+
+#### 서브쿼리 지원함수
+* [NOT] EXISTS (subquery) : 서브쿼리에 결과가 존재하면 참
+    * {ALL | ANY | SOME} (subquery)
+    * ALL 모두 만족하면 참
+    * ANY, SOME : 같은 의미, 조건을 하나라도 만족하면 참
+* [NOT] IN (subquery) : 서브쿼리의 결과 중 하나라도 같은 것이 있으면 참
+
+#### JPA 서브쿼리의 한계
+* JPA는 WHERE, HAVING 절에서만 서브 쿼리를 사용할 수 있다.
+* 하이버네이트를 사용하면 SELECT절에서 서브쿼리를 사용하는게 가능하게 된다. 예) `select (select avg(m1.age) from Member m1) as avgAge from Member m join Team t on m.username = t.name`
+* FROM 절에서 서브쿼리는 현재 JPQL에서 사용할 수 없다.
+    * 이런경우 join을 통해 대부분 해결이 가능하지만, 불가능한 경우도 있다.
+    * from절에 서브쿼리가 정말 필요한 경우 네이티브 SQL로 작성하거나, 쿼리를 분해해서 2번 날리거나, 그냥 쿼리를 가져와서 애플리케이션에서 조립하는 형태로 사용하는 방법이 있겠다. (join을 통해 해결하는것이 더 좋다.)
+
