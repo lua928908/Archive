@@ -1601,3 +1601,48 @@ select m from Member m where (select count(o) from Order o where m = o.member) >
     * 이런경우 join을 통해 대부분 해결이 가능하지만, 불가능한 경우도 있다.
     * from절에 서브쿼리가 정말 필요한 경우 네이티브 SQL로 작성하거나, 쿼리를 분해해서 2번 날리거나, 그냥 쿼리를 가져와서 애플리케이션에서 조립하는 형태로 사용하는 방법이 있겠다. (join을 통해 해결하는것이 더 좋다.)
 
+#### 조건식 - CASE 식
+
+<br>
+
+기본 CASE 식
+```
+select
+    case when m.age <=10 then '학생요금'
+         when m.age >=60 then '경로요금'
+         else '일반요금'
+    end
+from Member m
+```
+
+단순 CASE 식
+```
+select
+    case t.name
+        when '팀A' then '인센티브110%'
+        when '팀B' then '인센티브120%'
+        else '인센티브105%'
+    end
+from Team t
+```
+
+COALESCE : 하나씩 조회해서 null이 아니면 반환
+NULLIF : 두 값이 같으면 null 반환, 다르면 첫번째 값 반환
+
+<br>
+
+#### JPQL의 기본 함수
+
+JPQL에서는 DB와 상관없이 제공해주는 표준 함수들이 있다. 예를들어 문자를 더하는 concat함수, 문자를 자르는 substring함수, 공백을 제거하는 trim함수 등이 있다.
+표준으로 제공하는 기본함수 이외에 필요한 부분은 사용자 정의 함수를 통해 사용할 수 있다. 
+
+* CONCAT : 문자를 더한다. `select concat('a','b') from Member m`
+* SUBSTRING : 특정 위치부터 갯수만큼 문자를 자른다 `select concat(m.username, 1, 3) from Member m`
+* TRIMG : 문자의 공백 제거 `select trim(m.username) from Member m`
+* LOWER, UPPER : 소문자, 대문자로 변경 `select LOWER(m.username) from Member m`
+* LENGTH : 문자의 길이 `select LENGTH(m.username) from Member m`
+* LOCATE : 두번째 인자를 상대로 첫번째 인자의 문자를 검사해 index를 반환한다. `select locate('de', 'abcdefg') from Member m`, 4를 반환한다 (문자가 아닌 숫자로 반환한다.)
+* ABS, SQRT, MOD : 수학 관련 펑션이다, SQL과 동일
+* SIZE : 컬렉션의 크기를 돌려준다. `select size(t.members) From Team t`
+* INDEX : 값 타입에 `@OrderColumn` 어노테이션을 주고 값의 자릿값을 구할때 사용한다고 하는데 별로 추천하지 않는다.
+
