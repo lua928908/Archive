@@ -1715,7 +1715,18 @@ where t.name = '팀A'
     * SQL에 `DISTINCT`를 추가
     * 애플리케이션에서 엔티티 중복 제거
     
- SQL에 `DISTINCT`를 추가해서 쿼리가 실행될 때 중복을 제거한 이후 엔티티가 중복되는 경우가 있는지를 확인해
+SQL에 `DISTINCT`를 추가해서 쿼리가 실행될 때 중복을 제거한 이후 엔티티가 중복되는 경우가 있는지를 확인해
  엔티티의 중복도 제거해주는 것이다.
  
- `select distinct t From Team t join fetch t.members`를 사용해 DB에서의 중복과 식별자가 같은 엔티티 중복을 제거를 한다.
+`select distinct t From Team t join fetch t.members`를 사용해 DB에서의 중복과 식별자가 같은 엔티티 중복을 제거를 한다.
+ 
+<br>
+
+#### fetch join 의 한계
+
+* 페치 조인 대상에는 별칭을 줄 수 없다. (하이버네이트는 가능 하지만 가급적 사용하지 말 것)
+*둘 이상의 컬렉션은 페치 조인 할 수 없다.
+* 컬렉션을 페치 조인하면 페이징 API를 사용할 수 없다. (setFirstResult, setMaxResults)
+    * 일대일, 다대일 같은 단일 값 연관 필드들은 페치 조인해도 페이징이 가능
+    * 하이버네이트는 경고 로그를 남기고 메모리에서 페이징 (매우 위험)
+    
