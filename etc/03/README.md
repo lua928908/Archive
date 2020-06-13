@@ -60,6 +60,9 @@ Condition : 배부름 <br>
 | `ctrl + tab` | Switcher | 닫은 파일 열기 |
 | `ctrl + e` | Recent Files | 최근 사용한 파일 목록 |
 | `ctrl + shift + back space` | Last Edit location | 마지막 편집 위치로 커서 이동 |
+| `ctrl + f12` | File structure popup | 해당 파일의 구조 확인 예) 메서드 구조 |
+| `ctrl + alt + v` | Extract Variable | 코드의 결과를 변수로 추출한다. 예) Member m = repo.find(1L) |
+| `ctrl + alt + m` | Extract Method | 코드를 메서드로 추출한다. |
 
 <br>
 
