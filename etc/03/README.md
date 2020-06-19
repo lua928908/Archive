@@ -51,7 +51,7 @@ Condition : 배부름 <br>
 | `ctrl + j` | Insert Live Template | 약어를 통한 코드확장 예) java 에서 sout 으로 println 사용 가능 |
 | `ctrl + alt + s` | Settings... | 프로젝트 세팅 옵션 |
 | `ctrl + alt + l` | code format action  | 코드 줄맞춤 |
-| `shift + f6` | Rename | 리네임 리팩토링 |
+| `shift + f6` | Rename | 리네임 리팩토링 (파일 안에서 변수명을 한번에 변경하는 것도 가능) |
 | `ctrl + shift + f8` | View Breakpoints  | Breakpoints 다이얼로그 |
 | `f7` | Step Into | 스텝 인투 |
 | `f8` | Step Over | 스텝 오버 |
@@ -63,6 +63,7 @@ Condition : 배부름 <br>
 | `ctrl + f12` | File structure popup | 해당 파일의 구조 확인 예) 메서드 구조 |
 | `ctrl + alt + v` | Extract Variable | 코드의 결과를 변수로 추출한다. 예) Member m = repo.find(1L) |
 | `ctrl + alt + m` | Extract Method | 코드를 메서드로 추출한다. |
+| `shift + f6` | Extract Method | 코드를 메서드로 추출한다. |
 
 <br>
 
