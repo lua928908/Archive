@@ -24,6 +24,6 @@
 ETC
 
 * [Spring Boot 환경에서 EC2 접속 및 필수 환경설정 하기](https://github.com/lua928908/Archive/tree/master/etc/01)
-* [Spring Boot 환경에서 EC2 접속 및 필수 환경설정 하기](https://github.com/lua928908/Archive/tree/master/etc/01)
 * [RDS 생성 및 설정하기](https://github.com/lua928908/Archive/tree/master/etc/02)
 * [인텔리제이 (Intelli J)  사용법](https://github.com/lua928908/Archive/tree/master/etc/03)
+* [Docker 공부하기](https://github.com/lua928908/Archive/tree/master/etc/04)
