@@ -21,3 +21,42 @@
 
 ## 도커 설치하기
 
+윈도우10
+    - 처음 도커를 설치하려고하면 `Docker Desktop requires Windows 10 Pro/Enterprise (15063+) or Windows 10 Home (19018+).` 이런 에러가 발생할 것이다. [여기](https://github.com/docker/toolbox/releases)에서 Docker toolbox를 설치해주자
+    - 정상적인 실행을 위해서는, 작업관리자 '성능' 탭에서 '가상화:사용'이라고 표시되면 도커를 사용할 수 있다.
+    - 툴박스를 설치했으면 `Docker Quickstart Terminal`이라는 프로그램을 실행해 엔터를 눌러주자 터미널창에서 creating이 시작되며 VirtualBox를 설치할 것 이다.
+    - 반응이 없는경우 엔터를 입력하자, 마지막에 고래모양이 나오면서 `Start interactivi shell`이라고 나오면 정상적으로 설치가 완료되었다.
+    - 도커 명령어는 `Windows Powershell`이 아닌 `Docker Quickstart Terminal`에서 실행해야 한다. 네임스페이스가 다르다. 
+    - 이번엔 Docker Desktop을 설치하다 GUI 환경에서 도커를 사용할 수 있다. [Docker for Windows Only](https://docs.docker.com/docker-for-windows/install/) 주의점이 있다면 윈도우10 Pro 이상이어야 한다 Home버전에서는 Hyper-5를 사용할 수 없어서 도커데스크톱 사용이 안된다. 
+    - [참고 블로그](https://steemit.com/kr/@mystarlight/docker)를 확인해보면 좋을 것 이다.
+    
+맥
+    - [Docker for MAC](https://docs.docker.com/docker-for-mac/install/)
+
+## 도커 명령어
+
+| 커맨드 | 기능 |
+| ------ | --- |
+| `docker run example` | 이미지를 찾아 실행한다. (없으면 도커허브에서 풀링) |
+| `docker ps` | 현재 실행중인 컨테이너 리스트를 확인할 수 있다. |
+| `docker ps -a` | 실행중인 도커 컨테이너와 중지된 컨테이너까 정보를 확인할 수 있다. |
+| `docker container run <docker-image-name> <command>` | 도커 컨테이너를 실행한다. |
+| `수식.not` | 식의 조건을 반전 |
+
+<br>
+<br>
+
+`Docker Quickstart Terminal`을 실행하고 `docker run hello-world`을 입력해보자 `
+`Unable to find image 'hello-world:latest' locally` 라는 문구가 나오더니 다운로드를 할 것이다.
+로컬상에서 hello-world라는 이미지를 찾을 수 없어 도커허브에서 pulling 한것이다. 깃에서의 풀은 코드를 받는것이지만 도커에서는 이미지를 받는것이다.
+`https://hub.docker.com/` 이곳에서 도커 이미지를 공유할 수 있다. 좀더 알아보고 싶다면 `https://docs.docker.com/get-started/` 이곳을 확인해보라는 메세지가 나온다.
+즉 우리는 방금 도커허브에서 헬로월드 예제를 다운받아 실행해본 것이다.
+
+이번에는 `docker ps -a`를 실행해보자
+
+![도커 커맨드 실행](./images/주석%202020-07-05%20110042.png)
+
+위 이미지 처럼 컨테이너의 상태와 언제만들어졌는지 status에선 언제 실행되었는지가 표기된다. names는 정해준 값이 없기 때문에 임의에 이름이 부여되어 있다.
+
+`docker-machine.exe ls`를 실행해보면 실행되고 있는 버추얼박스와 정보를 확인할 수 있다.
+
