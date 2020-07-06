@@ -153,3 +153,29 @@ attach라는 명령어를 주면 실행되는 ubuntu나 centos에 터미널로 �
  docker run -v <localpath>:<container-path>
 ```
 파일을 공유하거나 공유할 때 사용하는 명령어가 -v 이다.
+
+## Oracle & Mysql 설치해보기
+
+```
+# oracle 다운로드
+docker pull oracleinanutshell/oracle-xe-11g
+
+# oracle 이라는 컨테이너 만들고 실행
+docker run -d -p 8080:8080 -p 1521:1521 --name oracle oracleinanutshell/oracle-xe-11g
+
+# 도커가 oracle을 실행하는 상태로 bash 쉘을 키도록 했다
+docker exec -it oracle bash
+
+# 그안에서 cat /etc/issue를 통해 OS를 확인해보자, Ubuntu 18.04.1 LTS \n \l 라고 나올것이다.
+cat /etc/issue
+```
+
+위 커맨드를 하나씩 실행해보면 결과적으로 도커위에 오라클이라는 컨테이너가 실행되고 그위에 우분투가 설치된 상태로 오라클이 실행되고 있는 모습이다.
+
+```
+# mysql 이미지 뒤에 태그로 버전을 지정해줄 수 있다.
+docker pull mysql:5.7
+
+# -e는 환경변수를 의미한다, MYSQL_ROOT_PASSWORD = root1! 라는 OS에서 사용할 환경변수를 만든것이다. 태그명이 latest가 아니면 적어주어야 실행된다.
+docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root1! --name mysql5 mysql:5.7 mysql
+```
