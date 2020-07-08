@@ -27,3 +27,4 @@ ETC
 * [RDS 생성 및 설정하기](https://github.com/lua928908/Archive/tree/master/etc/02)
 * [인텔리제이 (Intelli J)  사용법](https://github.com/lua928908/Archive/tree/master/etc/03)
 * [Docker 공부하기](https://github.com/lua928908/Archive/tree/master/etc/04)
+* [Linux 공부하기](https://github.com/lua928908/Archive/tree/master/etc/05)
