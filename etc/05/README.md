@@ -107,9 +107,41 @@ bash나 sh를 잘 다루는 것이 중요하다.
 
 #### 한글적용
  
+```
+# 최신으로 업데이트
+apt-get update
+
+# locales 다운로드
+apt-get install locales
+
+# KO UTF-8을 사용 간으하게 설정한다.
+localedef -f UTF-8 -i ko_KR ko_KR.UTF-8
+
+# ~/.profile에 LC_ALL 값이 ko_KR.UTF-8로 바뀐다, 뒤에 bash를 붙여야 쉘이 실행되며 인코딩이 바뀐다.
+LC_ALL=ko_KR.UTF-8 bash
+```
 apt-get install locales을 통해 lcales를 다운로드 받고 locale을 입력하면 언어설정이 나오는데
 LC_ALL의 값이 ko로 변경되면 한글적용이 가능해진다.
 `localedef -f UTF-8 -i ko_KR ko_KR.UTF-8`을 입력하면 설정이 된다.
 
 
-#### temp
+#### VI 에디터
+
+| 명령어 | 기능 |
+| ------ | --- |
+| `w` | 단어 단위로 이동한다. |
+| `ctrl+f` | 페이지 다운 |
+| `ctrl+u` | 페이지 업 |
+| `cw` | 하나의 단어를 변경 |
+| `dw` | 하나의 단어를 삭제 |
+| `v` | 블럭지정 |
+| `y` | 복사 |
+| `yy` | 한줄 복사 |
+| `p` | 붙여넣기 |
+| `dd` | 한줄 삭제 |
+| `:set nu` | 라인번호를 보여준다. |
+| `h, j, k, l` | 방향키 역할을 하는데 잘 안쓸것 같다. |
+| `:15` | 15번째 줄로 이동한다. |
+| `:q!` | 저장하지 않고 에디터 나가기 |
+| `!` | 커맨드 창으로 잠깐 나갔다가 엔터치면 에디터로 돌아온다. |
+| `!명령` | 커맨드 창으로 나간 이후 명령어를 실행 |
