@@ -46,6 +46,7 @@
 | 커맨드 | 기능 |
 | ------ | --- |
 | `docker run example` | 이미지를 찾아 실행한다. (없으면 도커허브에서 풀링) |
+| `docker pull`  | run은 이미지가 없는경우 다운로드도 하지만 pull의 경우 다운로드만 이루어 진다. |
 | `docker container run <docker-image-name> <command>` | 도커 컨테이너를 실행한다. 위 커맨드와 의미적으로 동일하다.(아마도) [참고](https://okky.kr/article/735452?note=2016019)  |
 | `docker ps` | 현재 실행중인 컨테이너 리스트를 확인할 수 있다. |
 | `docker ps -a` | 실행중인 도커 컨테이너와 중지된 컨테이너까 정보를 확인할 수 있다. |
@@ -55,6 +56,7 @@
 | `docker exec -it ubuntush cat /etc/hosts` | 이미 실행되고 있는 ubuntush라는 컨테이너에 `cat /etc/hosts`라는 실행을 명령할 수 있다. |
 | `docker rename "ubuntush" "ub"` | tbuntush라는 이름의 컨테이너 이름을 ub로 변경 |
 | `docker stop \`docker ps -q\` ` | docker ps -q를 하면 실행중인 컨테이너의 id를 가져오는데 이걸 stop으로 전달해서 모두 중지시키는 명령어이다. |
+| `docker commit ` | 현 컨테이너의 이미지를 그대로 저장한다, 예를들어 ubuntu를 설치하고 docker,aws-cli,git 등등을 설치한뒤 필요한 어플리케이션이 설치된 이미지의 상태를 commit해서 다시 저장할 수 있다. |
 
 <br>
 <br>
@@ -179,3 +181,40 @@ docker pull mysql:5.7
 # -e는 환경변수를 의미한다, MYSQL_ROOT_PASSWORD = root1! 라는 OS에서 사용할 환경변수를 만든것이다. 태그명이 latest가 아니면 적어주어야 실행된다.
 docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root1! --name mysql5 mysql:5.7 mysql
 ```
+
+<br>
+
+## 도커 레지스트리
+
+![레지스트리 구도](./images/Untitled.png)
+
+우리가 사용하고자 하는 애플리케이션, 즉 이미지를 찾고 싶다면 도커 레지스트리라는 개념을 알아야 한다.
+Registry 라는 일종의 보관소에서 image를 다운받는 형태로 사용할 수 있다. 누구나 image를 만들어서 push할 수도 있고 다운로드 할 수도 있다. 
+이미지는 static한 정지되어있는 상태이므로 container로 만들어서 실행을 해야한다. 컨테이너가 이미지를 띄워준 것이다.
+terminal 에서 `docker search <imageName>` 이런 형태로 확인할 수도 있으나 [도커허브](https://hub.docker.com/)를 참고하길 바란다.
+
+OFFICIAL IMAGE 라는 태그가 붙어있는 이미지의 경우 공식적으로 제공하는 이미지 이다.
+
+도커 허브에가서 회원가입을 하면 나만의 Private Repository 를 만들수 있다. 다만 프리플랜의 경우에 1개까지는 이용할 수 있으나
+더 많은 프라이빗 레포지토리를 원한다면 결제가 필요하다.
+
+<br>
+
+![레지스트리 구도](./images/주석%202020-07-18%20185757.png)
+
+전에는 프로그레스 바 형태의 디자인이여서 바를 올리면 사용가능한 공간이 얼마나 생기는지
+나오는 형태였는데 지금은 이런 정적인 모습으로 변했다. 아쉬운 것 같다.
+
+<br>
+
+## 도커의 라이프 사이클
+
+![레지스트리 구도](./images/Untitled%20(1).png)
+
+상당히 좋은 이미지 인것같다. 도커의 라이프사이클을 이해하기에도 좋고 명령어 들의 이해에도 도움이 되는것 같다. 
+
+<br>
+
+#### 참고자료
+- [시니어코딩IndiFlex - { docker } 도커 #1 - docker의 개념](https://www.youtube.com/watch?v=MHzxhoBmCwA)
+- [재즐보프 - 도커와 컨테이너 왜 필요한지 알고 계신가요!! 첫 번째 이야기](https://www.youtube.com/watch?v=ePpiEy_C_jk&list=PLnIaYcDMsSczk-byS2iCDmQCfVU_KHWDk&index=1)
