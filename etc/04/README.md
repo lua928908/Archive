@@ -1,4 +1,24 @@
 # Docker 공부하기
+
+## 참고 (에러상황)
+
+원래 docker terminal이 잘 실행되었는데 20.07.21 퇴근후 집에서 해보려고 하니 실행이 안되고있다.
+`Error getting IP address: Something went wrong running an SSH command` 이런 에러가 발생하는데 왜 IP를 얻지 못하는지 모르겠다.
+리니지m 때문에 블루스택 업데이트를 했는데 블루스택 안드로이드 업데이트가 영향을 주었나 의심스럽다.
+
+```
+docker-machine rm default
+docker-machine create --driver virtualbox default
+```
+위 코드로 해결 되었다.
+
+
+<br>
+
+---
+
+<br>
+
 ## 도커란 무엇인가?
 
 ![도커 설명](./images/99DEAB4D5B652E051B.png)
@@ -45,18 +65,26 @@
 
 | 커맨드 | 기능 |
 | ------ | --- |
-| `docker run example` | 이미지를 찾아 실행한다. (없으면 도커허브에서 풀링) |
 | `docker pull`  | run은 이미지가 없는경우 다운로드도 하지만 pull의 경우 다운로드만 이루어 진다. |
+| `docker create -p 80:80 --name nx nginx`  | nginx라는 이미지를 nx라는 이름의 컨테이너로 생성한다. |
+| `docker start`  | 도커 컨테이너를 실행한다, 생성하는것과는 다르다. |
+| `docker run example` | 이미지를 찾아 컨테이너로 만들고 실행까지 수행한다. (이미지 없으면 도커허브에서 풀링) |
+| `docker stop \`docker ps -q\` ` | docker ps -q를 하면 실행중인 컨테이너의 id를 가져오는데 이걸 stop으로 전달해서 모두 중지시키는 명령어이다. |
 | `docker container run <docker-image-name> <command>` | 도커 컨테이너를 실행한다. 위 커맨드와 의미적으로 동일하다.(아마도) [참고](https://okky.kr/article/735452?note=2016019)  |
+| `docker commit ` | 현 컨테이너의 이미지를 그대로 저장한다, 예를들어 ubuntu를 설치하고 docker,aws-cli,git 등등을 설치한뒤 필요한 어플리케이션이 설치된 이미지의 상태를 commit해서 다시 저장할 수 있다. |
 | `docker ps` | 현재 실행중인 컨테이너 리스트를 확인할 수 있다. |
 | `docker ps -a` | 실행중인 도커 컨테이너와 중지된 컨테이너까 정보를 확인할 수 있다. |
 | `docker system df` | 컨테이너가 얼만큼의 디스크를 사용하는지 정보를 알려준다. |
-| `docker prune` | 실행이 중지되어 있는 컨테이너들을 삭제한다. |
+| `docker <option> prune` | 사용하지 않는 컨테이너를 삭제하기위한 명령어인데 `<옵션>` 위치에 무엇을 넣느냐에 따라 역할이 달라진다. 대표적인 옵션들은 `system / image / container / volume / network` 이다. 예를들어 `docker container prune` 라고하면 안쓰는 컨테이너를 삭제하고 `docker network prune` 라고 실행하면 iptables 규칙 및 라우팅테이블과 가상네트워크 장치의 잉여 자원을 삭제한다. 터미널에서 삭제할거냐고 물어볼때 yes대신 y라고 쳐야 작동한다. |
 | `docker inspect nginx` | nginx 이미지를 볼 수 있다. |
+| `docker info` | 설치 디렉토리, 버전, storage가 설치된 디렉토리 등등 정보를 볼 수 있다. |
 | `docker exec -it ubuntush cat /etc/hosts` | 이미 실행되고 있는 ubuntush라는 컨테이너에 `cat /etc/hosts`라는 실행을 명령할 수 있다. |
 | `docker rename "ubuntush" "ub"` | tbuntush라는 이름의 컨테이너 이름을 ub로 변경 |
-| `docker stop \`docker ps -q\` ` | docker ps -q를 하면 실행중인 컨테이너의 id를 가져오는데 이걸 stop으로 전달해서 모두 중지시키는 명령어이다. |
-| `docker commit ` | 현 컨테이너의 이미지를 그대로 저장한다, 예를들어 ubuntu를 설치하고 docker,aws-cli,git 등등을 설치한뒤 필요한 어플리케이션이 설치된 이미지의 상태를 commit해서 다시 저장할 수 있다. |
+| `docker logs tc # stdout, stderr` | 컨테이너 로그 남기기 |
+| `docker cp <path> <to container>:<path>` | 로컬 시스템 -> 컨테이너로 파일 이동 |
+| `docker cp <from container>:<path> <path>` | 컨테이너 -> 로컬 시스템으로 파일 이동 |
+| `docker cp <from container>:<path> <to container>:<path>` | 컨테이너 -> 컨테이너로 파일 이동 |
+
 
 <br>
 <br>
@@ -215,6 +243,19 @@ OFFICIAL IMAGE 라는 태그가 붙어있는 이미지의 경우 공식적으로
 
 <br>
 
+## 도커의 레이어 개념
+
+![레지스트리 구도](./images/Untitled%20(2).png)
+
+도커의 이미지에는 레이어라는 개념이 있다. 위 이미지처럼 이미지안에 레이어가
+나뉘어져 있는데 레지스토리에 저장할 때 이미지를 각각 레이어로 쪼개서 겹치는 부분은 일치하는 레이어로 유지를 하고 바뀌는 부분만
+새롭게 저장되어 사용하게 된다.
+
+1. 이미지A를 지워도 이미지B에서 사용하는 레이어가 있다면 유지된다.
+2. 이미 존재하는 레이어는 새로 다운로드 받지않고 공유되듯 사용된다.
+
+
 #### 참고자료
 - [시니어코딩IndiFlex - { docker } 도커 #1 - docker의 개념](https://www.youtube.com/watch?v=MHzxhoBmCwA)
 - [재즐보프 - 도커와 컨테이너 왜 필요한지 알고 계신가요!! 첫 번째 이야기](https://www.youtube.com/watch?v=ePpiEy_C_jk&list=PLnIaYcDMsSczk-byS2iCDmQCfVU_KHWDk&index=1)
+
