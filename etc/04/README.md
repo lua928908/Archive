@@ -254,6 +254,58 @@ OFFICIAL IMAGE 라는 태그가 붙어있는 이미지의 경우 공식적으로
 1. 이미지A를 지워도 이미지B에서 사용하는 레이어가 있다면 유지된다.
 2. 이미 존재하는 레이어는 새로 다운로드 받지않고 공유되듯 사용된다.
 
+<br>
+
+## MySQL 환경변수를 사용한 서비스 구축
+```
+docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag
+```
+위 코드를 살펴보자 일반적으로 사용하던 container를 run 하는 도커 명령어와 비슷하지만 -e 명령어를 주었다.
+env 즉 환경변수를 `-e` 라고 적어주는 것이다. MYSQL_ROOT_PASSWORD라는 환경변수를 전달하는 것이다. container 안에 고정된 비밀번호를 박아넣으면
+되지않는가 생각할 수 있으나 공유기 해킹문제가 있다. 그래서 위 코드처럼 환경변수를 전달함으로 인해 초기 비밀번호를 세팅해주는 것이다.
+
+<br>
+<br>
+
+그럼 한번 실습해 보자
+```
+# --rm 옵션으로 컨테이너가 종료되면 삭제까지 자동으로 이루어지게 했다.
+docker run --name ms -e MYSQL_ROOT_PASSWORD=lua928908 --rm -d mysql
+
+# -it를 통해 bash로 들어갔다.
+docker exec -it ms bash
+
+# 현재 bash에서의 환경변수 이름과 값을 볼 수 있다.
+printenv
+
+# 특정 환경변수만 확인
+printenv env_name
+```
+
+위 내용중 `pintenv`를 쳐보면
+
+```
+root@0716c06a8ae1:/# printenv
+MYSQL_MAJOR=8.0
+HOSTNAME=0716c06a8ae1
+PWD=/
+MYSQL_ROOT_PASSWORD=lua928908
+HOME=/root
+MYSQL_VERSION=8.0.21-1debian10
+GOSU_VERSION=1.12
+TERM=xterm
+SHLVL=1
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+_=/usr/bin/printenv
+```
+이렇게 mysql bash에서 존재하는 환경변수 들을 확인할 수 있다.
+
+```
+docker exec -it ms mysql -u root -p
+```
+위 코드를 입력하면 패스워드를 입력하라고 나온다.
+조금전 환경변수 `-e MYSQL_ROOT_PASSWORD=lua928908` 라고 전달했던 것처럼
+lua928908을 입력하면 root 계정으로 로그인이 된다.
 
 #### 참고자료
 - [시니어코딩IndiFlex - { docker } 도커 #1 - docker의 개념](https://www.youtube.com/watch?v=MHzxhoBmCwA)
