@@ -307,7 +307,30 @@ docker exec -it ms mysql -u root -p
 조금전 환경변수 `-e MYSQL_ROOT_PASSWORD=lua928908` 라고 전달했던 것처럼
 lua928908을 입력하면 root 계정으로 로그인이 된다.
 
-#### 참고자료
+
+<br>
+
+## 도커 이미지 push하기 (docker hub에 저장하기)
+
+```
+sudo docker login
+# 아이디/이미지명 으로 이미지 이름을 바꾸어서 등록해야한다. 오피셜이 아니기 때문이다. 
+sudo docker tag exampleImage lua928908/exampleImage
+sudo docker images
+sudo docker push lua928908/exampleImage
+```
+
+당연한 이야기지만 먼저 [도커허브](https://hub.docker.com/)에 가입되어 있어야 한다.
+`docker login`을 입력하면 아이디와 비밀번호를 입력하라고 나온다, 마치 git에 로그인할 때 처럼, 그런다음 도커의 이미지명을 바꾸어야한다.
+`sudo docker tag exampleImage lua928908/exampleImage`를 통해 이미지 이름을 바꾸어 주어야 도커허브에 등록이 가능해진다. 우리가 임의로 만든 이미지
+이기 때문이다. (official 이라면 가능) 그런다음 `docker push lua928908/exampleImage`를 입력해 도커허브에 푸쉬해주는 것이다.
+
+
+
+
+#### 참고 및 추천자료
 - [시니어코딩IndiFlex - { docker } 도커 #1 - docker의 개념](https://www.youtube.com/watch?v=MHzxhoBmCwA)
 - [재즐보프 - 도커와 컨테이너 왜 필요한지 알고 계신가요!! 첫 번째 이야기](https://www.youtube.com/watch?v=ePpiEy_C_jk&list=PLnIaYcDMsSczk-byS2iCDmQCfVU_KHWDk&index=1)
+- [도커 컴포즈란?](https://www.44bits.io/ko/post/almost-perfect-development-environment-with-docker-and-docker-compose)
+- [docker-compose를 이용하여 개발환경 구축하기(feat. vagrant)](https://youtu.be/MqfGuhHnlxw)
 
