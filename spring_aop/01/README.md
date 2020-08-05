@@ -240,6 +240,8 @@ public class ProxySimpleEventService implements EventService {
 
 이렇게 어라운드에 bean을 이용해서 적용해 줄수도 있다.
 
+<br>
 
+## 참고자료
 
-
+[스프링 프레임워크 핵심 기술 - 백기선](https://www.inflearn.com/course/spring-framework_core/dashboard)

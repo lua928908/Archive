@@ -1,11 +1,4 @@
 # 인텔리제이 사용법
-## 포스트 작성시 환경
-
-OS : Window 10 <br>
-IntelliJ Version : 2019.3.1 <br>
-Condition : 배부름 <br>
-
-<br>
 
 ## 인텔리제이란
 
@@ -63,7 +56,11 @@ Condition : 배부름 <br>
 | `ctrl + f12` | File structure popup | 해당 파일의 구조 확인 예) 메서드 구조 |
 | `ctrl + alt + v` | Extract Variable | 코드의 결과를 변수로 추출한다. 예) Member m = repo.find(1L) |
 | `ctrl + alt + m` | Extract Method | 코드를 메서드로 추출한다. |
-| `shift + f6` | Extract Method | 코드를 메서드로 추출한다. |
+| `Shift + F10` | Run | 프로젝트를 실행한다. |
+| `ctrl + alt + Left/Right` | Navigate back / forward | 해당 메서드 코드위치로 이동 및 복귀한다.|
+| `ctrl + shift + F10` | Run context configuration from editor | IDE의 현재 문맥상 실행할 수 있는 요소가 있으면 실행한다 예) 테스트 코드, application |
+| `psvm + tab` | code extends | main 메서드를 자동으로 만들어준다. |
+| `ctrl + F9` | build project | springboot dev tools를 사용하면 build만 해도 자동으로 view와 관련된 코드를 바로 적용해주는 기능 때문에 빌드만 사용하는 경우도 많이 있다. |
 
 <br>
 
