@@ -326,6 +326,52 @@ sudo docker push lua928908/exampleImage
 이기 때문이다. (official 이라면 가능) 그런다음 `docker push lua928908/exampleImage`를 입력해 도커허브에 푸쉬해주는 것이다.
 
 
+<br>
+
+## 도커 완전 삭제 및 재설치하기
+
+필자의 경우 nginx를 중복배포하여 문제가 발생하는 경우가 있었다.
+docker로 배포가 안되는 오류를 접했는데 nginx 컨테이너가 자동으로 재실행되는 문제 때문에 EC2를 종료하고
+docker를 삭제한 뒤 재설치 후 정상 배포를 하였다.
+
+```
+# docker container 중지
+docker stop `docker ps -q`
+
+# docker container 삭제
+docker rm $(docker ps -a -q)
+
+# local에 저장된 image를 모두 삭제한다.
+docker rmi $(docker images -q)
+
+# docker service, containerd service 중지
+systemctl stop docker.service
+systemctl stop containerd.service
+
+# 디렉토리를 삭제한다.
+cd /var/lib/docker
+rm -rf *
+cd /var/run
+rm docker.sock docker.pid (rm: remove 소켓 `docker.sock'? 라고 물어보면 y)
+rm -rf docker
+```
+깔끔하게 이렇게 삭제를 한다.
+
+<br>
+
+```
+# docker 설치
+apt install docker
+
+# docker 실행
+systemctl start docker
+
+# 배포
+npm run deploy:production [profileName]
+```
+위 코드를 통해 docker를 재설치하고 기존방식대로
+배포를 진행한다.
+
 
 
 #### 참고 및 추천자료
