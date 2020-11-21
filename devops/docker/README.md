@@ -21,7 +21,7 @@ docker-machine create --driver virtualbox default
 
 ## 도커란 무엇인가?
 
-![도커 설명](./images/99DEAB4D5B652E051B.png)
+![도커 설명](images/99DEAB4D5B652E051B.png)
 
 <br>
 
@@ -56,7 +56,7 @@ docker-machine create --driver virtualbox default
     
 <br>
 
-![도커](./images/주석%202020-07-05%20154236.png)
+![도커](images/주석 2020-07-05 154236.png)
 
 도커는 리눅스 환경에서 실행되는데 윈도우는 리눅스가 아니기 때문에 윈도우에서 도커를 설치하면
 오라클 버추얼박스 라는것을 추가로 띄워서 그위에 도커를 실행시키게 된다.
@@ -99,7 +99,7 @@ docker-machine create --driver virtualbox default
 
 이번에는 `docker ps -a`를 실행해보자
 
-![도커 커맨드 실행](./images/주석%202020-07-05%20110042.png)
+![도커 커맨드 실행](images/주석 2020-07-05 110042.png)
 
 위 이미지 처럼 컨테이너의 상태와 언제만들어졌는지 status에선 언제 실행되었는지가 표기된다. names는 정해준 값이 없기 때문에 임의에 이름이 부여되어 있다.
 
@@ -123,7 +123,7 @@ run 다음의 --name 은 컨테이너에 webserver라는 이름을 붙이는 것
 
 <br>
 
-![오라클 vm 설정](./images/주석%202020-07-05%20162206.png)
+![오라클 vm 설정](images/주석 2020-07-05 162206.png)
 그렇다면 Oracle VM VirtualBox 앱을 실행 -> 설정 -> 네트워크 -> 고급 -> Port Forwarding으로 들어가 위 이미지처럼 설정해주자.
 
 윈도우에서 도커를 쓰는경우 리눅스가 아니므로 오라클 VM 위에서 도커가 동작한다고 했다, 도커 컨테이너가 바로 진입하지 못하기 때문에
@@ -214,7 +214,7 @@ docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root1! --name mysql5 mysql:5.7
 
 ## 도커 레지스트리
 
-![레지스트리 구도](./images/Untitled.png)
+![레지스트리 구도](images/Untitled.png)
 
 우리가 사용하고자 하는 애플리케이션, 즉 이미지를 찾고 싶다면 도커 레지스트리라는 개념을 알아야 한다.
 Registry 라는 일종의 보관소에서 image를 다운받는 형태로 사용할 수 있다. 누구나 image를 만들어서 push할 수도 있고 다운로드 할 수도 있다. 
@@ -228,7 +228,7 @@ OFFICIAL IMAGE 라는 태그가 붙어있는 이미지의 경우 공식적으로
 
 <br>
 
-![레지스트리 구도](./images/주석%202020-07-18%20185757.png)
+![레지스트리 구도](images/주석 2020-07-18 185757.png)
 
 전에는 프로그레스 바 형태의 디자인이여서 바를 올리면 사용가능한 공간이 얼마나 생기는지
 나오는 형태였는데 지금은 이런 정적인 모습으로 변했다. 아쉬운 것 같다.

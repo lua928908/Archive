@@ -40,7 +40,7 @@ DB 커넥션 오류가 발생할 때 경험이 적은 사용자들은 DB를 따�
 처음 H2 데이터베이스를 실행했을 때 Database "~/test" not found, and IFEXISTS=true, so we cant auto-create it [90146-199] 이런 오류가 발생하는 경우가 있다, 데이터베이스 파일이 없는 상황인데
 <br>
 
-![h2 db 접속 콘솔](./images/h2_db_create.png)
+![h2 db 접속 콘솔](images/h2_db_create.png)
 
 위 이미지 처럼 JDBC URL에
 
@@ -61,7 +61,7 @@ DB 커넥션 오류가 발생할 때 경험이 적은 사용자들은 DB를 따�
 
 <br>
 
-![h2 접속성공 모습](./images/Screenshot%202020-11-03%20at%2023.30.33.jpg)
+![h2 접속성공 모습](images/Screenshot 2020-11-03 at 23.30.33.jpg)
 
 위 이미지 처럼 접속에 성공했다면 왼쪽 패널에 보이는 table과 질의를 위한 가운데의 콘솔을 이용해 사용하면 된다.
 
