@@ -304,6 +304,59 @@ DROP USER `lua`@`%`;
 <br>
 <br>
 
+#### UNION - 합집합
+
+집합의 연산에는 합집합 이라는 것이 있다.
+A 집합 {1,2,3}과 B집합 {2,10,11} 이 있을 때 A와B를 합치면 합집합이다. {1,2,3,10,11} 로 표현된다.
+수학적 표현할 때 ∪(합집합), ∩(교집합) 으로 표현한다.
+이런 역할이 mysql에서는 UNION 이다. mysql에서는 select 명령어를 합치는 역할을 하는 것이다.
+```
+SELECT * FROM a
+UNION
+SELECT * FROM b
+```
+위에 쿼리를 실행한다고 할 때 쿼리의 결과는 아래와 같은 것이다.
+
+| a |
+| ------ |
+| 1 |
+| 2 |
+| 3 |
+| 10 |
+| 11 |
+
+생각보다 쉽지 않을가? 한가지 기억할 점은 `ORBER BY`를 사용하고 싶다면 마지막 SELECT 명령어 에만 사용해야 한다.
+```
+SELECT a FROM table_a
+UNION
+SELECT b FROM table_b ORDER BY b 
+``` 
+
+그리고 수학에서 말하는 집합은 중복값이 존재하지 않는것을 전제로 한다, 그래서 `UNION`으로 값을 가져오면 중복된 2는 사라지는 것이다.
+마치 `DISTINCT`를 사용한 것처럼 말이다, 이 때 중복값이 존재하길 원한다면 `UNION ALL`을 사용하면 된다.
+
+#### 교차결합 (곱집합)
+
+야구나 축구에서 대진표를 만들 때 주로 교차집합이 사용된다. mysql에서는 table을 여러개 지정하면 곱집합이 된다.
+```
+SELECT * FROM sample_x, sample_y; 
+```
+| x | y |
+| ---- |  ---- |
+| A |  1 |
+| B |  1 |
+| C |  1 |
+| A |  2 |
+| B |  2 |
+| C |  2 |
+| A |  3 |
+| B |  3 |
+| C |  3 |
+
+
+<br>
+<br>
+
 ## 코드 총 정리
 
 ```
@@ -462,4 +515,15 @@ WHERE 구문과 같이 사용할 때, WHERE 구문이 먼저 적용되고 난 �
  : 복잡한 쿼리문을 만들 때 많이 사용하게 되는 구문이 서브쿼리문이다. 서브쿼리의 사용은 Nested Loop 를 돌기 때문에 사용에 주의하자.
 
 (ex) SELECT accountInfo from accounts where accountName in (select accountName from accountNames);       //accountNames 테이블에 있는 이름에 대해서만 accountInfo를 조회하는 쿼리(Validation)
+
+
+
+-       UNION
+: 테이블 row 값을 합치는 합집합이다, 행이 추가됨
+
+ex)
+SELECT a FROM table_a
+UNION
+SELECT b FROM table_b ORDER BY b 
+
 ```
