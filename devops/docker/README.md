@@ -49,14 +49,14 @@ docker-machine create --driver virtualbox default
     - 반응이 없는경우 엔터를 입력하자, 마지막에 고래모양이 나오면서 `Start interactivi shell`이라고 나오면 정상적으로 설치가 완료되었다.
     - 도커 명령어는 `Windows Powershell`이 아닌 `Docker Quickstart Terminal`에서 실행해야 한다. 네임스페이스가 다르다. 
     - 이번엔 Docker Desktop을 설치하다 GUI 환경에서 도커를 사용할 수 있다. [Docker for Windows Only](https://docs.docker.com/docker-for-windows/install/) 주의점이 있다면 윈도우10 Pro 이상이어야 한다 Home버전에서는 Hyper-5를 사용할 수 없어서 도커데스크톱 사용이 안된다. 
-    - [참고 블로그](https://steemit.com/kr/@mystarlight/docker)를 확인해보면 좋을 것 이다.
+    - [참고 블로그](https://steemit.com/kr/@mystarlight/docker) 를 확인해보면 좋을 것 이다.
     
 맥
     - [Docker for MAC](https://docs.docker.com/docker-for-mac/install/)
     
 <br>
 
-![도커](images/주석 2020-07-05 154236.png)
+![도커](images/주석%202020-07-05%20154236.png)
 
 도커는 리눅스 환경에서 실행되는데 윈도우는 리눅스가 아니기 때문에 윈도우에서 도커를 설치하면
 오라클 버추얼박스 라는것을 추가로 띄워서 그위에 도커를 실행시키게 된다.
@@ -99,7 +99,7 @@ docker-machine create --driver virtualbox default
 
 이번에는 `docker ps -a`를 실행해보자
 
-![도커 커맨드 실행](images/주석 2020-07-05 110042.png)
+![도커 커맨드 실행](images/주석%202020-07-05%20110042.png)
 
 위 이미지 처럼 컨테이너의 상태와 언제만들어졌는지 status에선 언제 실행되었는지가 표기된다. names는 정해준 값이 없기 때문에 임의에 이름이 부여되어 있다.
 
@@ -123,7 +123,8 @@ run 다음의 --name 은 컨테이너에 webserver라는 이름을 붙이는 것
 
 <br>
 
-![오라클 vm 설정](images/주석 2020-07-05 162206.png)
+![오라클 vm 설정](images/주석%202020-07-05%20162206.png)
+
 그렇다면 Oracle VM VirtualBox 앱을 실행 -> 설정 -> 네트워크 -> 고급 -> Port Forwarding으로 들어가 위 이미지처럼 설정해주자.
 
 윈도우에서 도커를 쓰는경우 리눅스가 아니므로 오라클 VM 위에서 도커가 동작한다고 했다, 도커 컨테이너가 바로 진입하지 못하기 때문에
