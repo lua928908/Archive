@@ -229,7 +229,7 @@ OFFICIAL IMAGE 라는 태그가 붙어있는 이미지의 경우 공식적으로
 
 <br>
 
-![레지스트리 구도](images/주석 2020-07-18 185757.png)
+![레지스트리 구도](images/주석%202020-07-18%20185757.png)
 
 전에는 프로그레스 바 형태의 디자인이여서 바를 올리면 사용가능한 공간이 얼마나 생기는지
 나오는 형태였는데 지금은 이런 정적인 모습으로 변했다. 아쉬운 것 같다.
@@ -321,7 +321,7 @@ sudo docker images
 sudo docker push lua928908/exampleImage
 ```
 
-당연한 이야기지만 먼저 [도커허브](https://hub.docker.com/)에 가입되어 있어야 한다.
+당연한 이야기지만 먼저 [도커허브](https://hub.docker.com/) 에 가입되어 있어야 한다.
 `docker login`을 입력하면 아이디와 비밀번호를 입력하라고 나온다, 마치 git에 로그인할 때 처럼, 그런다음 도커의 이미지명을 바꾸어야한다.
 `sudo docker tag exampleImage lua928908/exampleImage`를 통해 이미지 이름을 바꾸어 주어야 도커허브에 등록이 가능해진다. 우리가 임의로 만든 이미지
 이기 때문이다. (official 이라면 가능) 그런다음 `docker push lua928908/exampleImage`를 입력해 도커허브에 푸쉬해주는 것이다.
