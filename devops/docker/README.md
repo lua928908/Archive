@@ -84,6 +84,10 @@ docker-machine create --driver virtualbox default
 | `docker cp <path> <to container>:<path>` | 로컬 시스템 -> 컨테이너로 파일 이동 |
 | `docker cp <from container>:<path> <path>` | 컨테이너 -> 로컬 시스템으로 파일 이동 |
 | `docker cp <from container>:<path> <to container>:<path>` | 컨테이너 -> 컨테이너로 파일 이동 |
+| `docker build -t <imageName> <Dockerfile path>` | 이미지를 빌드한다, 경로는 Dockerfile의 경로를 지정해주면 된다. Ex) `docker build -t lua ./` |
+| `docker run -d -p 3000:3000 lua` | lua 라는 커스텀 이미지를 실행시키고, 3000포트에 매핑한다, -d는 detached 옵션으로 컨테이너실행을 백그라운드로 동작하게 한다. |
+| `docker run -d -p 3000:3000 -v /app/node_modules -v $(pwd):/app lua` | -v 옵션으로 볼륨을 지정해 매번 빌드하지않고 이미지나 소스를 참조하게 한다. (mac 환경) |
+| `docker run -d -p 3000:3000 -v /app/node_modules -v %cd%:/app lua` | -v 옵션으로 볼륨을 지정해 매번 빌드하지않고 이미지나 소스를 참조하게 한다. (window 환경) |
 
 
 <br>
@@ -372,6 +376,70 @@ npm run deploy:production [profileName]
 ```
 위 코드를 통해 docker를 재설치하고 기존방식대로
 배포를 진행한다.
+
+<br>
+<br>
+
+
+## Dockerfile 살펴보기
+
+Dockerfile은 기본적으로 이미지를 직접 생성하고 빌드하여 사용하는 것이다.
+나만의 이미지를 만들 수 있고, 도커허브에 등록해 손쉽게 다운로드 하거나 다른사람이 사용할 수도 있다.
+비공개 도커이미지를 올리면 유료결제를 해야한다.
+
+```
+# base image
+FROM node:14
+
+# WORKDIR를 지정해야 어플리케이션과 관련된 파일을 copy할 때 한곳에 소스를 모을 수 있고, 혹시 파일시스템 이름과 겹치는 경우
+# 원래 베이스 이미지의 디렉토리를 덮어씌우는 문제가 발생할 수 있다.
+# WORKDIR를 설정하면 실행중인 도커 컨테이너에 접속했을 때 워크디렉토리로 들어가게 된다.
+WORKDIR /app
+
+# package.json 파일만 따로 copy하면 캐싱이 되기때문에 종속성이 바뀌는 경우에만 새로 npm을 install 하게 된다.
+COPY ./package.json ./
+RUN npm i
+
+# 모든 파일을 copy하지만 위에서 package.json은 먼저 copy하며 캐싱되었기 때문에 소스코드 변경만 감지된다.
+COPY ./ ./
+
+# 컨테이너 실행이후 실행될 명령어, CMD는 하나의 dockerfile에 한번만 실행가능하다. 중복인 경우 마지막 명령어만 실행
+CMD ["node", "server.js"]
+```
+
+<br>  
+
+## docker-compose
+
+도커를 사용할 때 우리는 하나의 컨테이너만을 사용하지는 않는다, 여러개의 도커 컨테이너가 실행되어야 하는 경우가 많고
+혹은 컨테이너를 재실행시켜야 하는 경우도 있을 것이다. 이럴 때 각 컨테이너들의 설정과 환경등을 정의하는데 docker-compose가 필요하게 된다.
+
+```
+# 사용할 도커컴포즈 버젼
+version: "3"
+services:
+  redis-server:
+    # redis-server 컨테이너가 동작할 때 필요한 도커이미지 이름
+    image: "redis"
+  node-app:
+    # build는 node-app이라는 컨테이너를 실행할 때 필요한 이미지의 경로라고 볼 수 있다.
+    # 즉, build에 작성된 경로에 Dockerfile을 빌드해서 node-app이라는 services를 동작시킨다.
+    # Dockerfile과 docker-compose.yml 파일이 같은 디렉토리에 있기 때문에 "." 으로 표기한다.
+    build: .
+    # 브라우저에서 3000번 포트로 접속하면 node-app의 4000번 포트에 매핑시킨다.
+    ports:
+      - 3000:4000
+
+# docker-compose up 이라고 입력하면 컴포트가 빌드 후 컨테이너를 실행한다.
+# docker-compose up --build 라고 입력하면, 다시 빌드 후 컨테이너들을 실행한다.
+# docker-compose down 으로 도커컴포즈를 중지할 수 있다.
+# docker-compose -d up 으로 detatched 옵션을 주면 컴포즈가 동작하고 컨테이너의 쉘에 들어가지 않고 실행시키게 된다.
+```
+
+사실상 dockerfile 자체의 공부도 중요하지만 docker-compose에 대한 각 키워드를 공부하는게 중요한 것 같다.
+docker-compose로 작성된 내용을 실행할 때는 `docker` 커맨드대신 `docker-compose` 커맨드를 사용한다.
+ 
+
 
 
 
