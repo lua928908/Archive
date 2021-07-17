@@ -28,3 +28,4 @@
     - [인텔리제이 (Intelli J)  사용법](https://github.com/lua928908/Archive/tree/master/etc/03)
     - [Linux 공부하기](https://github.com/lua928908/Archive/tree/master/etc/05)
     - [Tim Urban - The AI Revolution](https://github.com/lua928908/Archive/tree/master/etc/Tim_Urban____The_AI_Revolution/01)
+    - [HTTP 공부하기](https://github.com/lua928908/Archive/tree/master/etc/http/01)
