@@ -106,15 +106,81 @@ IP안에는 출발지 IP와 목적지 IP 기타정보가 포함된다 했다, �
 * 애플리케이션에서 추가 작업이 필요하다. (TCP는 느린데 이걸 더 최적화 하고 싶다면 UDP를 가지고 본인이 직접 튜닝해야 한다.)
 * 요즘 UDP가 오히려 각광이라고 한다. HTTP3가 핸드쉐이킹을 줄이고자 UDP를 채택 하였다고 한다.  [HTTP3가 UDP를 채택한 이유](https://evan-moon.github.io/2019/10/08/what-is-http3/)
 
+<br>
+
+### PORT
+
+![PORT 이미지](../images/Screenshot%202021-07-17%20at%2013.35.07.jpg)
+
+<br>
+
+포트는 항구라는 뜻이다 하나의 클라이언트 PC에서 여러대의 서버에 연결되어야 한다면,
+예를들어 웹브라우저 에서 쇼핑을 하면서 게임도 켜놓고 음악도 듣고 있다면 나의 IP로 온 패킷이
+게임에 대한 패킷인지 웹 브라우저의 응답 결과로 온 패킷인지 알 수 없게된다. IP만으로는 이 문제가
+해결되지 않고 그래서 TCP/IP 패킷을 주고 받을 때 출발지의 PORT와 도착지의 PORT 정보도 포함되어 있다.
+
+`PORT는 같은 IP 내에서 프로세스를 구분하는데 목적이 있다.`
+
+* 0 ~ 65535 까지 port를 할당할 수 있다.
+* 0 ~ 1023 이미 사용되는 알려진 포트, 사용하지 않는게 좋다.
+* FTP - 20, 21
+* TELNET - 23
+* HTTP - 80
+* HTTPS - 443
+
+<br>
+<br>
 
 
+## URI 와 웹 브라우저 요청 흐름
 
+URI는 Uniform Resource Identifier, 리소스를 식별하는 통합된 방법 정도의 의미로 이해할 수 있을 것 같다.
 
+* URI
+* URL
+* URN
 
+![uri 개념](../images/Screenshot%202021-07-18%20at%2014.39.53.jpg)
 
+세가지는 다른 개념이다. URN은 거의 처음들어 보았는데 [여기](https://www.ietf.org/rfc/rfc3986.txt)에서 `1.1.3.  URI, URL, and URN` 이라는 목차를 보면 세 정의를 확인해 볼 수 있다.
+URI 라는 리소스를 식별하는 가장 큰 개념이 있고 그 안에 URL (Locator)과 URN(Name) 이 포함된다.
+URL은 그냥 해당 위치에 리소스가 있다 라는 의미이고 URN은 해당 리소스의 이름이다.
 
+![url과 uln 형태](../images/Screenshot%202021-07-18%20at%2014.40.38.jpg)
 
+URN은 이런 형태의 모습 이다, 대부분 URL을 사용하고 url은 위치에 대한 정보여서 바뀔수도 있다 urn은 이름이기 때문에 바뀌지 않는다.
+url보다 더 좋을 것 같지만 urn은 책의 ISPN 정보를 구분하는 형태에서 사용되기도 한다고 하나 경험할 일이 잘 없을 듯 하다.
 
+<br>
 
+### URL schema
 
+* schema: //[userInfo@]host[:port][/path][?query][#fragment]
+* https://www.google.com:443/search?q=hello&hl=ko
+* 맨위에 언급했던 HTTP 완벽가이드 책에 URI 관련내용이 구체적으로 잘 설명되어 있다.
+
+<br>
+
+#### 웹 브라우저 요청 흐름
+
+* https://www.google.com/:443/search?q=hello&hl=ko
+
+위 요청이 브라우저로 전달된다면 www.google.com 라고하는 정보를 DNS에서 조회해 IP를 알아내고
+
+```
+GET /search?q=hello&hl=ko HTTP/1.1
+Host: www.google.com
+```
+
+이런 모습으로 HTTP 요청 메세지가 생성될 것이다, 그리고 IP정보와 포트정보를 알고 있으니 SOCKET 라이브러리를 통해 
+TCP/IP로 `www.google.com` 호스트에 SYN/ACK 를 통해 연결되었는지 확인할 것이다 (가상연결), HTTP 메세지에 TCP/IP 패킷정보를 담아
+네트워크를 통해 서버로 요청이 전달되고 수 많은 인터넷 노드를 통해서 구글로 요청이 전달될 것이다. 요청을 받는 서버는 도착한 HTTP 요청을 파싱해서 HTTP 요청 메세지를 생성하고
+TCP/IP 패킷을 만들어서 응답을 해주고 클라이언트로 전달된 응답 HTTP 메세지를 브라우저가 화면에 보여주게 된다.
+
+```
+참고로 계속 언급되는 노드란 Node.js를 말하는게 아니다 컴퓨터 과학에 쓰이는 기초적 단위를 의미하고 HTML에서 가장 작은 단위에 요소를 node 라고 표현 한다.
+마찬가지로 여기서 의미하는 노드는 Node.js가 아니라 컴퓨터과학이나 통신망에서 의미하는 노드이다. 
+```
+
+<br>
 
