@@ -276,6 +276,9 @@ HTTP 메서드는 클라이언트가 서버로 요청을 할 때 기대하는 �
 * CONNECT : 요청한 리소스에 대해 양방향 연결을 시작하는 메소드, 터널을 열기위해 사용된다. [추가설명](https://developer.mozilla.org/ko/docs/Web/HTTP/Methods/CONNECT)
 * TRACE (en-US) : 대상 리소스의 경로를 따라 메시지 루프백 테스트를 수행하여 디버깅 메커니즘을 제공한다. [추가설명](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/TRACE)
 
+REST API를 설계할 때는 리소스 기반으로 설계해야 하지만 실제로는 오롯이 리소스 위주로 URI를 설계하고 http 메서드만으로 행위를 구분하기는 어렵다.
+그렇기 때문에 `POST /orders/{id}/start-delivery` 와 같은 설계가 필요하기도 한데 이런경우를 컨트롤URI 라고 부른다. (동사를 사용할 것)
+
 <br>
 
 ### HTTP 메서드 속성
@@ -315,3 +318,31 @@ _그런데 POST는 멱등하지 않다, 결제를 2번하거나 게시물을 2�
 만약 웹브라우저에서 큰 이미지 리소스를 응답받는 경우 응답 결과 리소스를 캐시해서 사용할 수 있는가 하는 여부이다.
 스펙상으로는 `GET, HEAD, POST, PATCH`에 캐시 가능하다고 되어있지만
 실제로는 GET, HEAD 정도만 캐시로 사용한다. POST나 PATCH는 본문내용(바디의 내용)까지 캐시 key로 고려를 해야하는데 쉽지 않다.
+
+<br>
+<br>
+
+### 클라이언트 -> 서버로 데이터 전송
+
+클라이언트가 서버로 부터 데이터를 전송할 때에는 크게 두가지 방식이 있다, 쿼리파라미터 와 메세지 바디를 통한 전송 이다.
+
+* 정적 데이터 조회: 그냥 GET `/static/example.jpg`와 같이 정적인 파일을 조회할 때는 아무 데이터없이 GET으로 리소스를 조회하기만 하면 된다.
+* 동적 데이터 조회:
+  * 쿼리 파라미터 : GET으로 동적 데이터를 조회해야 하는 경우, 주로 게시판 목록을 필터하거나 검색하는 경우 URI의 마지막 부분에 물음표와
+    함께 key, value의 모양으로 데이터를 전송한다. `google.com/search?q=hello&hl=ko` 이 때 모든 값은 `String` 타입으로 전달된다.
+  * HTML Form 전송 : html 문서중 form 태그가 존재한다. form 태그에 method와 action을 통해 어디로 전송할지 정할 수 있고, submit을 하면 form의
+    데이터를 읽어서 HTTP 메세지로 만들고 form안에 입력했던 내용을 body에 담아 전송하는 것이다.
+    이 때 Content-Type 은 `application/x-www-form-urlencoded` 이다. JSON으로 보내는 바디데이터와 form 데이터를 구분할 수 있어야 한다.
+    이 개념을 전혀 모르고 있으면 나중에 삽질을 만나게 된다. [Content-Type 종류](https://juyoung-1008.tistory.com/4)
+
+
+![파일을 보내는 경우](../images/Screenshot%202021-07-23%20at%2016.21.05.jpg)
+
+파일과 같은 바이너리 데이터를 보내는 경우 `multipart/form-data` 타입으로 보내면 된다, 각 필드들을 위 이미지처럼 나누어준다. 물론 HTTP 메세지는 브라우저가 자동으로 생성해준다.
+개인적 경험으로는 프론트에서 필터와 같은 화면을 만들 때 검색한 옵션들을 쿼리스트링으로 만들어 놓으면 다른페이지로 이동한 뒤 뒤로가기를 해서
+돌아오는 경우, 또는 다른사람에게 내가 보고있는 화면을 공유하는 경우에 유리하다, 즉 URL에 쿼리스트링으로 필터정보를 남기면 좋다.
+
+[좋은 URI 설계 개념](http://restfulapi.net/resource-naming)
+
+<br>
+
