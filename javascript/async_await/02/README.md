@@ -55,3 +55,26 @@ console.log(3)
 
 맨 처음 나왔던 예제와 비슷하다, 이렇게 await 키워드를 붙여 동기처럼 동작하게 할 수 있다.
 
+```
+async function myFetch() {
+  let response = await fetch('coffee.jpg');
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return await response.blob();
+
+}
+
+myFetch().then((blob) => {
+  let objectURL = URL.createObjectURL(blob);
+  let image = document.createElement('img');
+  image.src = objectURL;
+  document.body.appendChild(image);
+})
+.catch((e) =>
+  console.log(e)
+);
+```
+
+위 코드를 확인해 보자 만약 이미지를 먼저 불러온 이후에 어떠한 처리를 해주어야 한다면
+`myFetch()` 라는 async 함수를 만들고 `.then`으로 콜백처럼 다음 코드를 실행하게 할 수 있다. 
