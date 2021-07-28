@@ -51,7 +51,7 @@ let myFunc = async () => {
 console.log(1)
 await myFunc()
 console.log(3)
-
 ```
 
 맨 처음 나왔던 예제와 비슷하다, 이렇게 await 키워드를 붙여 동기처럼 동작하게 할 수 있다.
+
