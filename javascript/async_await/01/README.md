@@ -55,7 +55,7 @@ Promise를 처음 공부할 때 azu라는 저자의 [JavaScript Promise](http://
 
 <br>
 
-![promise](../images/promises.png)
+![promise](../images/xmc8aa7dnc13t3xp5ap4.png)
 
 Promise는 다음 중 하나의 상태를 가진다.
 
@@ -107,30 +107,6 @@ test()
 <br>
 
 #### Promise 고급 예제
-<br>
-
-## await는 최상위 레벨에서 작동하지 않는다.
-
-```
-let response = await fetch('/article/promise-chaining/user.json')
-let user = await response.json()
-```
-
-최상위 레벨에서 await을 사용하려고 하면 문법 에러가 발생한다.
-
-```
-(async () => {
-  let response = await fetch('/article/promise-chaining/user.json');
-  let user = await response.json();
-  ...
-})();
-```
-하지만 익명함수로 감싸주게 되면 최상위 레벨에서도 await을 사용하는 것이 가능해 진다.
-상당히 유용하다고 생각이 든다. 잘 기억해 놓자.
-
-<br>
-
-## async/await 이 Promise의 대체제 인가?
 
 MDN Web docs 에서 예제를 가져와 봤다.
 https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Promise
@@ -232,38 +208,3 @@ await Promise.all(
 무의미한 array나 someMathod로 표현했다, Promise.all() 메서드는 파라미터로 전달된 모든 프로미스가 fulfilled 상태가 될 때 까지 다른 코드를 실행하지 않는다.
 
 <br>
-[여기](https://medium.com/@constell99/%EC%9E%90%EB%B0%94%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%EC%9D%98-async-await-%EA%B0%80-promises%EB%A5%BC-%EC%82%AC%EB%9D%BC%EC%A7%80%EA%B2%8C-%EB%A7%8C%EB%93%A4-%EC%88%98-%EC%9E%88%EB%8A%94-6%EA%B0%80%EC%A7%80-%EC%9D%B4%EC%9C%A0-c5fe0add656c) 글을보면 4~5년 전 글이긴 하지만
-async/await 이 promise를 대체하는 신기능 쯤으로 생각하는 것 같다. 내 짧은 지식이 잘못 판단하는 걸짐 모르지만 async/await이 proimse를 대체하기 위한
-것은 아니라고 생각된다. 결국 async 함수가 Promise를 반환하는 것이니까 사실 대체 한다는 것은 이상한 말인 것 같다.
-
-```
-let myFunc = async () => {
-    setTimeout(() => {
-      console.log(2)
-      return 2
-    }, 2000)
-}
-
-console.log(1)
-await myFunc()
-console.log(3)
-```
-위 코드는 1,3,2가 콘솔에 출력된다 myFunc라는 함수가 콘솔을 출력한 이후 return을 하지만
-위 방법으로는 우리가 원하는 대로 동기로 동작하게 할 수 없다.
-
-```
-let myFunc = async () => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      console.log(2)
-      resolve()
-    }, 2000)
-  })
-}
-
-console.log(1)
-await myFunc()
-console.log(3)
-```
-동기로 사용하고자 하는 코드가 Promise로 만들어져 있어야 동기적으로 실행하는 것이 가능하다.
-실무에 개발하며 별 공수없이 await을 사용하는 라이브러리들도 모두 프로미스를 지원하기 때문에 이러한 사용이 가능한 것이다.
