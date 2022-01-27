@@ -58,7 +58,7 @@ API 호출후 버그가 발생하는 경우가 최악의 상황이라는 뜻이�
 <br>
 
 #### 2. 견고함 한스푼 +1
-![javascript Spongebob animation image](./images/1_opN7wHJG5ITFYXcCvS7LUg.jpeg)
+![javascript Spongebob animation image](images/1_opN7wHJG5ITFYXcCvS7LUg.jpeg)
 
 위 이미지를 본적이 있는가?
 자바스크립트의 모호함을 잘 알려주는 이미인 것 같다.

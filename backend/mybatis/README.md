@@ -19,7 +19,7 @@ mybatis.mapper-locations=classpath:mybatis/mapper/**/**.xml
 
 <br>
 
-![회원가입 페이지](../../db/mysql/images/2020-02-25.jpeg)
+![회원가입 페이지](../mysql/images/2020-02-25.jpeg)
 
 * 개인사이트를 만들기 위해 bootstrap으로 대충 만들던중 mybatis관련 포스트를 작성하기 위해 예제로 사용해 UI가 심각.
 * 회원가입 페이지에서 정보를 입력하고 Register 버튼을 누르면 POST `/register`로 요청을 보내게 된다.
