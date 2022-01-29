@@ -141,6 +141,8 @@ $ sed -i -e 's/\r$//' deploy.sh
 
 ### docker Daemon이 안켜졌다는 오류
 
+[참고문서](https://docs.docker.com/desktop/windows/wsl/)
+
 이상하게 도커도 정상적으로 설치되었고 Docker Desktop 에서도 문제가 없는데
 막상 도커가 안되는 경우를 만났다 윈도우에서 bash를 사용하는 경우에는 Ubuntu를 실행해 그 안에서
 동작시키는 환경이다, 파워쉘에서 `bash`를 입력하면 `/mnt/c/Users/`안에서 구동된다는 것을 알 수 있다 그런데 표준의 Linux 환경과 동일하지가 않기 때문에 여러가지 문제들이 생긴다.
