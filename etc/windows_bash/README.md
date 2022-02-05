@@ -112,9 +112,10 @@ wsl 설정을 2가 아닌 1로 변경해야 했나 그랬던 것으로 기억한
 이 글을 읽고있는 독자도 window환경에서 linux처럼 사용할 수 없을까 생각한다면 그냥 개발용 노트북을 사라고
 추천하고 싶다.
 
+<br>
+<br>
 
-
-## 윈도우에서 쉘스크립트 실행시 유의사항
+# 윈도우 Ubuntu 환경에서 만난 에러들
 
 ### 개행 방식에 따른 오류
 윈도우에서 ubuntu 환경으로 세팅후 bash에서 쉘스크립트를 통해 배포할 때
@@ -164,3 +165,32 @@ $ wsl --set-default Ubuntu
 이 문제를 해결하기 위해 위 명령어를 입력해 주고
 ubuntu bash 에서 다시 도커를 사용하려고 하면 아직도 도커 데몬이 동작중이 아니라고
 나올것 이다, 그 땐 `$ dockerd`를 통해 도커데몬을 직접 실행시킨다. 새 터미널을 열어 배포나 도커를 실행하면 정상적으로 실행 된다.
+
+<br>
+
+### SWC Failed to Load 에러 메세지
+
+개인적으로 만들어보고 싶은 프로젝트가 생겨 `create-next-app`을 이용해 프로젝트를 설정하고 있는데 `npm start`로 프로젝트를 실행하려면
+`npm run build`로 빌드를 해줘야 되는 것이였다 가장 큰 문제는 코드가 변경되었을 때 [nodemon](https://www.npmjs.com/package/nodemon) 처럼 프론트 화면이 리프래쉬가 안된다.
+아무렴 `create-next-app`이 엄청 유명한 보일러플레이트 인데 이게 안될까..? 뭐지 싶어서 검색을 하다 보니 그냥 `next dev`로 실행시키면 로컬에서
+개발할 때 자동으로 리프래쉬 된다고 써있다 뭐지 싶어서 계속 확인을 하다보니 해결이 되었다.
+
+#### 해결법
+1. 터미널을 열었을 때 window 환경에서 앱을 실행해야 한다, bash 를 입력하면 Ubuntu 머신에서 bash 가 열리는데 그냥 윈도우에서 실행 해야 한다.
+2. 윈도우에서 `next dev` 혹은 `npm run dev`를 하면 `SWC Failed to Load` 에러가 발생한다. 이 때 next에서 아주 친절하게 해결 가능한 링크를 알려준다.
+3. 아래와 같이 행동한다.
+
+<br>
+
+```
+{
+  "presets": ["next/babel"],
+  "plugins": ["@babel/plugin-proposal-do-expressions"]
+}
+```
+`.babelrc` 파일을 생성한다.
+
+```
+npm i @babel/plugin-proposal-do-expressions
+```
+바벨 플러그인을 설치하고, Ubuntu가 아닌 window 터미널에서 `npm run dev` 혹은 `next dev`를 실행하면 잘 실행 된다.
