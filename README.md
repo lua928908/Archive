@@ -13,7 +13,7 @@
 - [Mysql 기초 배워보기](https://github.com/lua928908/Archive/tree/master/backend/mysql/01)
 - [passport - 로그인 관리](https://github.com/lua928908/Archive/tree/master/backend/passport/01)
 - [sequelize - javascript ORM](https://github.com/lua928908/Archive/tree/master/backend/sequelize/01)
-- [Spring AOP](https://github.com/lua928908/Archive/tree/master/backend/spring_AOP/01)
+- [Spring AOP](https://github.com/lua928908/Archive/tree/master/backend/spring_aop/01)
 - [타입스크립트 배우기](https://github.com/lua928908/Archive/tree/master/backend/typescript)
 
 # Front
