@@ -176,7 +176,7 @@ JPA에서는 사용자가 요청을 보내면 `EntityManager Factory`가 `Entity
  * 비영속 (new/transient)
     * 영속성 컨텍스트와 전혀 관계가 없는 새로운 상태
     
-   ```
+   ```java
    Member member = new Member();
    member.setId("member1");
    member.setUsername("회원1");
@@ -185,7 +185,7 @@ JPA에서는 사용자가 요청을 보내면 `EntityManager Factory`가 `Entity
 * 영속 (managed)
     * 영속성 컨텍스트에 관리되는 상태
     
-    ```
+    ```java
     EntityManager em = emf.createEntityManager();
     em.getTransaction.begin();
   
@@ -246,14 +246,14 @@ JPA에서 DB와 통신을 통해 값을 저장하거나 변경을 일으킬 때 
 * JPQL을 사용할 때는 미리 한번 실행한다, JPQL로 만약 select를 하는데 이전값을 저장을 안하고 영속상태로만(persist) 만들고 조회를 한다면 값이 없을 것이다. 그럼 문제가 발생할 수도있다. 이런경우를 방지하기 위해 JPQL이 실행 하기 전 무조건 플러시를 한번 하고난 이후 쿼리가 실행된다.
 
 #### 직접 영속성 컨텍스트를 플러시 하는법
-```
+```java
 em.flush() // 직접 호출
 ts.commit() // 트랜잭션에 커밋을 할 때 호출
 JPQL 쿼리실행 // JPQL이 실행될 때 자동으로 플러시를 한번 호출하고 쿼리가 실행된다.
 ```
 값을 테스트하기 위함이 아니라면 개발자가 직접 플러시를 할 일이 별로 없다.
 
-```
+```java
 em.setFlushMode(FlushMode.AUTO) // 기본값, 커밋이나 쿼리를 실행할 때 플러시 한다.
 em.setFlushMode(FlushModeType.COMMIT) // 커밋할 때만 플러시 한다.
 ```
@@ -379,8 +379,8 @@ id는 별것 없다 그냥 `@Id`라고만 사용하면 데이터를 삽입할 �
 즉 결국엔 3가지 옵션이고 오토를 선택하면 DB에 따라 셋중 한개를 JPA에서 자동으로 결정하는 것이다.
 
 
-```
-@ENtity
+```java
+@Entity
 @SequenceGenerator(
     name = "MEMBER_SEQ_GENERATOR",
     sequenceName = "MEMBER_SEQ", // 매핑할 데이터베이스 시퀀스 이름
@@ -398,7 +398,7 @@ public class Member{
 <br>
 
 #### 코드 예제
-```
+```java
 @Id
 @GeneratedValue(strategy = GenerationType.AUTO)
 private Long id;
@@ -421,7 +421,7 @@ private Long id;
 
 ## 단방향 매핑
 
-```
+```java
 Team team = new Team;
 team.setName("TeamA");
 em.persist(team);
@@ -441,7 +441,7 @@ Team findTeam = em.find(Team.class, findTeamId); teamId를 가지고 다시 team
 
 이 부분을 단방향 매핑을 통해 해결한다면
 
-```
+```java
 public class Member{
     @Id
     @GeneratedValue
@@ -460,7 +460,7 @@ Member 객체에 Team 필드부분을 관계가 무엇인지, 조인하는 컬�
 
 <br>
 
-```
+```java
 Team team = new Team;
 team.setName("TeamA");
 em.persist(team);
@@ -487,7 +487,7 @@ Team findTeam = findMember.getTeam(); // 아까와 달리 teamId를 받을 필�
 * 하지만 DB입장에서는 방향이라는 개념자체가 없다 그냥 외래키(FK)를 가지고 내가원하는 방향에서 아무렇게나 join으로 확인해 볼 수 있기때문이다. 이 예제에서는 member가 foreign key를 통해 team을 가져오거나 team이 foreign key을 통해 member를 가져오는게 원래 가능하다는 뜻이다. 테이블에서는 방향이란 개념자체가 없고 외래키 만으로 양방향이 이미 다 할수있는 상태다.
 * 이런 패러다임의 차이를 극복하기위해 객체입장에서는 member와 team의 둘다 foreign key를 넣어주어야 하는 상황인거다.
 
-```
+```java
 public class Team{
     @Id
     @GeneratedValue
@@ -503,7 +503,7 @@ public class Team{
 
 <br>
 
-```
+```java
 Team team = new Team;
 team.setName("TeamA");
 em.persist(team);
@@ -541,7 +541,7 @@ List<Member> members = findMember.getTeam().getMembers(); // getTeam으로 멤�
 #### 양방향 연관관계 주의점!
 1. 주인이 아닌 
 
-```
+```java
 Team team = new Team();
 team.setName("TeamA");
 em.persist(team);
@@ -577,7 +577,7 @@ DB에서 조회하는게 아니라 영속성 컨텍스트의 1차캐시에서 �
 위에 내용처럼 양방향에서 값을 넣을때 Owner와 mapped(가짜매핑)에 둘다 값을 넣자고 했다.
 그런데 사람이 하는일이기 때문에 실수를 할 가능성이 충분히 있다. 그렇기 때문에 연관관계 편의 메소드를 만들어 실수를 줄이는 방법이 권장된다. (연관관계 편의메소드라는 표현은 김영한 님이 그냥 정한 표현)
 
-```
+```java
 public class Member{
     @Id
     @GeneratedValue
@@ -601,7 +601,7 @@ public class Member{
     public Team getTeam() {return team;}
 
     // 편의 메소드
-    public void setTeam(){
+    public void setTeam(Team team){
         this.team = team;
         team.getMembers().add(this);
     }
@@ -654,7 +654,7 @@ member Entity에 `setTeam()`을 하면 원래는 그냥 `this.team = team;` 부�
 위 3가지 방식중 무엇을 사용하든 JPA는 다 매핑을 하도록 지원을 한다.
 JPA 에서 기본으로 제공하는 전략은 `single table` 전략으로 한테이블에 다 때려박는 전략을 기본으로 채택하고 있다.
 
-```
+```java
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED) // 상속관계 매핑 전략을 JOINED로 설정한다 (join을 통한 구현)
 public class Item {
@@ -666,7 +666,7 @@ public class Item {
     private Long price;
 }
 
-```
+```java
 위 코드처럼 부모 Entity 객체(부모DB)에 `@Inheritance`어노테이션에 전략을 JOINED로 변경하고
 ```
 @Entity
@@ -728,7 +728,7 @@ public abstract class BaseEntity {
 
 위 처럼 BaseEntity라는 중복되는 속성을 관리하는 부모엔티티를 만들고 `@MappedSuperclass`어노테이션을 붙여서 이 엔티티는 상속해주기 위한 엔티티라는 것을 명시한다.
 
-```
+```java
 @Entity
 public class member extends BaseEntity{
     @Id
@@ -771,7 +771,7 @@ public class member extends BaseEntity{
 
 #### 프록시
 
-```
+```java
 Member member = em.find(Member.class, 1L);
 printMember(member); // 멤버 정보를 출력하는 메서드
 
@@ -785,7 +785,7 @@ JPA에서는 한번에 필요없는 정보까지 가져오는것을 지연로딩
 
 JPA에서는 `em.find()`도 있지만 `em.getReference()`도 있다. find는 실제 DB에서 쿼리로 조회를 해오는 것이고 getReference는 DB조회를 미루는 가짜(프록시) 엔티티 객체를조회한다. 결론적으로 DB에 쿼리가 안나갔는데 객체가 조회가 된다. 
 
-```
+```java
 Member member = new Member();
 member.setUsername("hello");
 em.persist(member);
@@ -839,7 +839,7 @@ System.out.println("findMember.username = " + findMember.getUsername()); // 여�
 5. 영속성 컨텍스트의 도움을 받을 수 없는 준영속 상태일 때 프록시를 초기화하면 문제가 발생한다.
 
 #### 3번특성 프록시의 == 비교 예제
-```
+```java
 Member member1 = new Member();
 Member member2 = new Member();
 
@@ -869,7 +869,7 @@ System.out("m2 instanceof = " + (m2 instanceof Member));
 
 #### 4번특성 이미있는 영속성 컨텍스트 예제
 
-```
+```java
 Member member1 = new Member();
 em.persist(member1);
 
@@ -924,7 +924,7 @@ em.close()를 통해 엔티티 매니저를 닫아버려도 똑같은 문제가 
 member만 사용하는 상황에서는 join하지 않아도 되는 테이블값이 전달되니 손해다. 이런문제를 해결하기 위해
 지연로딩을 사용한다.
 
-```
+```java
 @Entity
 public class Member{
     @Id
@@ -941,7 +941,7 @@ public class Member{
 ```
 member 객체에 fetch속성을 통해 지연로딩을 설정했다.
 
-```
+```java
 Team team = new Team();
 team1.setName("team1");
 em.persist(team);
@@ -969,7 +969,7 @@ System.out.println("==================");
 
 <br>
 
-```
+```java
 @Entity
 public class Member{
 
@@ -1024,7 +1024,7 @@ member를 가지고 올때 team이 즉시로딩이 걸려있으면 가져올때 
 <br>
 
 __중요한 코드만 작성하고 그외 필드나 getter,setter같은 코드는 생략하였다.__
-```
+```java
 @Entity
 public class Parent{
     @Id
@@ -1060,7 +1060,7 @@ public class Child{
 
 자식이 Owner이고 자식도 부모객체를 가지고 있다.
 
-```
+```java
 Child child1 = new Child();
 Child child2 = new Child();
 
@@ -1076,7 +1076,7 @@ em.persist(child2);
 원래는 이런식으로 persist가 3번 호출되어야 할것이다. 부모와 자식을 다 생성해주어야 하니까
 그런데 영속성전이를 사용해 부모엔티티가 persist되면 자식도 persist가 되게 할 수 있다는 것이다.
 
-```
+```java
 @Entity
 public class Parent{
     @Id
@@ -1114,7 +1114,7 @@ public class Parent{
 
 부모 엔티티와 연관관계가 끊어진 자식 엔티티를 자동으로 삭제하는 것이다.
 
-``````
+```java
 @Entity
 public class Parent{
    @Id
@@ -1129,7 +1129,7 @@ public class Parent{
        child.setParent(this);
    }
 }
-``````
+```
 
 `orphanRemoval = true`를 추가하면 부모엔티티의 컬렉션에 삭제되면 DB의 값도 삭제되게 된다.
 
@@ -1180,7 +1180,7 @@ JPA에는 최상위에 엔티티 타입과 값 타입이 있다.
 <br>
 
 Member 객체
-```
+```java
 @Entity
 public class Member{
     @Id
@@ -1201,7 +1201,7 @@ public class Member{
 ```
 
 Period 객체
-```
+```java
 @Embeddable
 public class Period{
     private LocalDateTime startDate;
@@ -1210,7 +1210,7 @@ public class Period{
 ```
 
 Address 객체
-```
+```java
 @Embeddable
 public class Address{
     private String city;
@@ -1228,7 +1228,7 @@ public class Address{
 
 값 타입은 복잡한 객체 세상을 조금이라도 단순화 하려고 만든 개념이다. 따라서 값 타입은 단순하고 안전하게 다룰 수 있어야 한다.
 
-```
+```java
 Address address = new Address(city, street, 1000);
 
 Member member = new Member();
@@ -1251,7 +1251,7 @@ member를 만드는행위는 계층에서 이루어지고 비즈니스 로직도
 임베디드 타입 같은 값 타입을 여러 엔티티에서 공유하면 위험하다.
 
 
-```
+```java
 Address address = new Address(city, street, 1000);
 
 Member member = new Member();
@@ -1280,7 +1280,7 @@ em.persist(member2);
 #### 값 타입의 비교
 
 값타입의 비교에서는 인스턴스가 달라도 그안에 값이 같으면 같은 것으로 봐야한다.
-```
+```java
 int a = 10;
 int b = 10;
 
@@ -1288,7 +1288,7 @@ System.out.println("boolean = " + a==b); // true
 ```
 기본값은 비교하면 트루가 나오지만
 
-```
+```java
 Address a = new Address("서울");
 Address b = new Address("서울");
 
@@ -1312,7 +1312,7 @@ euqlas를 오버라이드로 구현할 때는 hashCode 메서드로 만들어 �
 
 값 타입을 List, Set, Map 과 같이 컬렉션으로 사용하는 것을 값 타입 컬렉션이라고 한다.
 
-```
+```java
 @Entity
 public class Mameber{
     @Id
@@ -1343,7 +1343,7 @@ public class Mameber{
 * 데이터베이스는 컬렉션을 같은 테이블에 저장할 수 없다. (엔티티의 일반 필드와 컬렉션 값 타입을 같이 담을 수 없다는 뜻이다, 별도의 테입르이 필요하므로 join 키가 필요하게 된다.)
 * 컬렉션을 저장하기 위한 별도의 테이블이 필요하다.
 
-```
+```java
 Member member = new Member();
 member.setUsername("member1"); // 일반 필드 값 채우기
 member.setHomeAddress(new Address("homeCity, "street, "1000")); // Embedded 필드 값 채우기, 참조를 막기위해 new로 생성
@@ -1368,7 +1368,7 @@ em.persist(member);
 
 #### 값 타입 컬렉션의 값 수정
 
-```
+```java
 // homeCity 였던 값을 newCity로 바꾸고 싶은 상황
 
 Member findMember = em.find(Member.class, member.getId()) // 위에 생성된 객체가 있다고 치고
@@ -1377,14 +1377,14 @@ findMember.getHomeAddress().setCity("newCity") // set으로 변경 시도
 
 이렇게 하면 변경되지 않을까 생각할 수 있으나 이렇게 set으로 바꾸면 안된다, 값 타입은 immutable 해야되기 때문이다.
 
-```
+```java
 Member findMember = em.find(Member.class, member.getId())
 Address a = findMember.getHomeAddress(); // city만 바꾸고 나머지는 원래 기존값을 쓰고싶어서
 findMember.setHomeAddress(new Address("newCity", a.getStreet(), a.getZipcode())) // 새 인스턴스로 갈아끼움
 ```
 setCity가 아닌 setHomeAddress를 통해 어드레스 객체를 새로 넣어주어야 한다, Address 객체의 인스턴스를 아예 새로 갈아끼워야 한다.
 
-```
+```java
 // 치킨을 한식으로 바꾸고 싶은 상황
 findMember.getFavoriteFoods().remove("치킨");
 findMember.getFavoriteFoods().add("한식");
@@ -1433,7 +1433,7 @@ JPQL 이란?
 
 결국 JPQL을 SQL로 번역해서 실행하게 되는 것이다.
 
-```
+```java
 List<Member> result = em.createQuery(
     "select m from Member m where m.username like '%kim%'",
     member.class
@@ -1465,7 +1465,7 @@ JPA표준으로써 JPA Criteria가 있긴 하지만, 복잡한 쿼리에경우 �
 * 별칭을 사용할땐 별칭을 적어주어야 하고 as는 생략할 수 있다. (어찌보면 당연한 얘기)
 
 #### 집합과 정렬
-```
+```sql
 select
     count(m), // 회원수
     sum(m.age), // 나이 합
@@ -1535,7 +1535,7 @@ JPA에서의 페이징을 위한 API는 매우 쉽고 간결하며 아트의 경
 
 이렇게 2가지 API로 페이징을 추상화 하였다.
 
-```
+```java
 List<Member> result = em.createQuery("select m from Member m order by m.age desc", Member.class)
     .setFirstResult(0)
     .setMaxResults(10)
