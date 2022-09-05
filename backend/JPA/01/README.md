@@ -501,6 +501,8 @@ public class Team{
 ```
 양방향 관계를 위해 Member객체에 관계를 설정했드시 Team객체에 관계를 설정한다. 
 
+<br>
+
 ```
 Team team = new Team;
 team.setName("TeamA");
@@ -531,7 +533,7 @@ List<Member> members = findMember.getTeam().getMembers(); // getTeam으로 멤�
 
 #### 양방향 매핑 규칙
 * 객체의 두 관계중 하나를 연관관계의 주인으로 지정
-* 연관관계의 주인만이 뢰개 키를 관리(등록, 수정)
+* 연관관계의 주인만이 외래키를 관리(등록, 수정)
 * 주인이 아닌쪽은 읽기만 가능
 * 주인은 mappedBy 속성 사용 X
 * 주인이 아니면 mappedBy 속성으로 주인 지정
