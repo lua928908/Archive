@@ -665,21 +665,23 @@ public class Item {
     private String name;
     private Long price;
 }
+```
+위 코드처럼 부모 Entity 객체(부모DB)에 `@Inheritance`어노테이션에 전략을 JOINED로 변경하고
+<br>
 
 ```java
-위 코드처럼 부모 Entity 객체(부모DB)에 `@Inheritance`어노테이션에 전략을 JOINED로 변경하고
-```
 @Entity
 public class Book extends Item {
     private String author;
 
     private String isbn;
 }
-
 ```
 자식 Entity 객체가 부모 Entity 객체를 extends로 상속하면 JPA가 알아서 부모엔티티에 있는 값을 자식에도 넣어준다.
 
-```
+<br>
+
+```java
 Book book = new book();
 
 book.setName("자유론") // 부모 테이블
