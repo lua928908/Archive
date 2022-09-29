@@ -208,3 +208,49 @@ await Promise.all(
 무의미한 array나 someMathod로 표현했다, Promise.all() 메서드는 파라미터로 전달된 모든 프로미스가 fulfilled 상태가 될 때 까지 다른 코드를 실행하지 않는다.
 
 <br>
+
+
+## useEffect 함수에서 async/await 사용하기
+
+```
+updateUser = () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const url = "/getUser";
+            const response = await fetch(url);
+            if (response.ok) {
+                const user = await response.json();
+                //
+                // Do something with user object...
+                //
+            } else {
+                console.log("response", response);
+                window.location = "/admin";
+            }
+            resolve();
+        } catch (error) {
+            console.log("error: ", error);
+            reject(error);
+        }
+    });
+};
+```
+
+위 코드처럼 `useEffect` 콜백 함수에 `async`를 선언하면 안된다 `useEffect`에 return 값으로 오는 함수는 `componentWillUnmount`의 역할을 하기 때문이다. `async`를 선언하면
+`Promise`를 반환하기 때문에 사용하면 안된다.
+
+```
+const updateUser = async () => {
+    const url = "/getUser";
+    let response;
+
+    try {
+        response = await fetch(url);
+    } catch (error) {
+        Promise.reject(error);
+    }
+
+    return Promise.resolve(response);
+}
+```
+위 내용처럼 `useEffect` 내부에서는 함수를 호출하기만 하고 `then()`, `catch`로 처리해 주어야 한다.
