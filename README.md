@@ -33,3 +33,4 @@
 - [Spring Boot 환경에서 EC2 접속 및 필수 환경설정 하기](https://github.com/lua928908/Archive/tree/master/etc/springboot_ec2)
 - [Tim Urban - The AI Revolution](https://github.com/lua928908/Archive/tree/master/etc/Tim_Urban____The_AI_Revolution/01)
 - [윈도우에서 bash 사용하기](https://github.com/lua928908/Archive/tree/master/etc/windows_bash)
+- [Springboot+Next 프로젝트 개발 과정 기록하기](https://github.com/lua928908/Archive/tree/master/etc/retrospect_next_project)
