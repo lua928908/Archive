@@ -72,7 +72,7 @@ NEXT_PRODUCTION_URL=https://example.com
 ```
 
 ### 스프링부트 프로젝트 TokenUtil.java 설정
-```
+```java
 public static void setAuthCookie(String refreshToken, HttpServletResponse httpResponse) {
   Cookie cookie = new Cookie("refreshToken", refreshToken);
   cookie.setHttpOnly(true);
@@ -105,7 +105,7 @@ getServerSideProps를 호출할 때 즉 SSR처리를 하면 서버에 있는 스
 <br>
 
 기존에는
-```
+```javascript
 case HYDRATE:
     return action.payload
 ```
@@ -196,3 +196,76 @@ const rootReducer = (state: any, action: any) => {
 
 3번 방법은 1번 방법과 비슷한데 firebaseIdToken 이라는 하나의 프로퍼티만 지정해서 관리해주기보다 auth라는 객체 자체를 무조건
 클라이언트 측 상태를 쓰게 하는 방법이다.
+
+### 2022.10.14 추가
+> auth라는 별도의 state를 만들어서 인증과 관련된 부분은 auth에서 관리하였다.
+
+<br>
+---
+<br>
+
+# CSR/SSR 서로 상태가 호환안되는 문제 (인증 상태 유지하기 해결하기)
+## 시나리오
+
+1. 로그인을 한다 (메인페이지로 이동)
+2. `axios.defaults.headers.common.firebaseIdToken = 'ABCD...'` 을 추가한다. (refreshToken은 쿠키에 idToken은 메모리상에서만 보관하기로 함, localStorage 안됨)
+3. 다른 페이지로 이동
+4. 이동한 페이지의 `serverSideProps`에서 dispatch하는 axios는 `firebaseIdToken`이 없다 (로그인 후 설정해주었는 데도 없다)
+
+처음 이 문제를 확인했을 때 axios의 instance가 서로 달라서 그런건가 라고 생각했다. 그래서 아래 코드처럼 `axiosInstance`라는 인스턴스를 만들어 axios요청이 필요한 곳에서 import해 사용했었다.
+
+```javascript
+const axiosInstance = axios.create()
+axiosInstance.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL
+axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
+axiosInstance.defaults.withCredentials = true
+
+// refreshToken 관련 코드
+axiosInstance.interceptors.response.use((response) => response, errorHandler)
+```
+그런데 이렇게 싱글톤으로 인스턴스를 가져와 사용하게 만들어도 문제가 계속되자 구글링을 하다 보니 CSR/SSR 서로 각각 상태공유가 안되는 것으로 보였다.
+어떤 글에서는 axios를 사용하지 말고 create-next-app을 하면 생성되는 `/api` 디렉토리에 있는 예제처럼 api를 사용하라고 하는 글도 있었다.
+
+<br>
+
+api처리를 변경하는 것은 무리가 있다고 생각되어서 찾다가 결과적으로 처리한 방식은 _app.tsx에 서버사이드랜더링 부분에 cookie를 커리하는 코드를 넣는 방법 이였다.
+```javascript
+App.getInitialProps = async (context: any) => {
+  const {ctx, Component} = context
+  let pageProps: any = {}
+  const allCookies = cookies(ctx)
+
+  if (allCookies && allCookies.refreshToken) {
+    axiosInstance.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL
+    axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
+    axiosInstance.defaults.withCredentials = true
+    axiosInstance.defaults.headers.common['Cookie'] = `refreshToken=${allCookies.refreshToken}`
+    const {data} = await axiosInstance({
+      method: 'post',
+      url: '/refresh-token',
+      withCredentials: true
+    })
+    axiosInstance.defaults.headers.common.firebaseIdToken = data.data.firebaseIdToken
+    pageProps.firebaseIdToken = data.data.firebaseIdToken
+  } else {
+    axiosInstance.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL
+    axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
+    axiosInstance.defaults.withCredentials = true
+    pageProps.firebaseIdToken = null
+    delete axiosInstance.defaults.headers.common['Cookie']
+    delete axiosInstance.defaults.headers.common.firebaseIdToken
+  }
+
+  if (Component.getInitialProps) {
+    pageProps = await Component.getInitialProps(ctx)
+  }
+
+  return {pageProps}
+}
+```
+
+* `_app.tsx`에서는 `getServerSideProps`가 동작하지 않는듯 하다
+* 다른 페이지에서는 `getServerSideProps`를 할 때 `next-redux-wrapper`를 통해 만든 wrapper를 가져와 사용하지만 최신 next버전 에서는 `next-redux-wrapper`를 사용할 수 없는 것으로 보인다
+* 위 내용과 동일한 issue가 등록되어 있으나 8개월째 처리되지 않음... [링크](https://github.com/kirill-konshin/next-redux-wrapper/issues/455)
+
+# 작성중...
