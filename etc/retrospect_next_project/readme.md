@@ -268,4 +268,100 @@ App.getInitialProps = async (context: any) => {
 * 다른 페이지에서는 `getServerSideProps`를 할 때 `next-redux-wrapper`를 통해 만든 wrapper를 가져와 사용하지만 최신 next버전 에서는 `next-redux-wrapper`를 사용할 수 없는 것으로 보인다
 * 위 내용과 동일한 issue가 등록되어 있으나 8개월째 처리되지 않음... [링크](https://github.com/kirill-konshin/next-redux-wrapper/issues/455)
 
-# 작성중...
+<br>
+
+Header.tsx에서는 pageProps로 전달받은 값을 사용해 로그인이 되어있는지 체크하게 사용했다. 헤더 컴포넌트에서 useEffect를 사용해 로그인 이후에 새로고침으로 진입하는 경우를 처리하기 위한 코드를 추가 했다.
+
+```javascript
+const Header = ({firebaseIdToken}: any) => {
+
+  const {authMemberInfo, firebaseIdToken: authStoreFirebaseIdToken} = useSelector((state: any) => state.auth)
+
+  useEffect(() => {
+    // _app.tsx에 getInitialProps에서 내려준 firebaseIdToken이 있다면 axiosInstance에 넣어주기
+    if (firebaseIdToken && signOutDone === false)
+      axiosInstance.defaults.headers.common.firebaseIdToken = firebaseIdToken
+
+    // 클라이언트에서 로그인/비로그인 여부는 authMemberInfo로 확인하기
+    if (firebaseIdToken && authMemberInfo === null && signOutDone === false) {
+      dispatch({
+        type: GET_AUTH_MEMBER_INFO_REQUEST
+      })
+    }
+  }, [authMemberInfo, firebaseIdToken])
+
+
+  return (
+      <header
+        // firebaseIdToken로 로그인/로그아웃 플래그 처리하기
+      </header>
+  )
+}
+
+export default Header
+```
+
+자세한 코드 내용은 삭제하고 대략적인 부분만 작성하였다.  
+<br>
+
+요약하면 아래와 같다.
+* 로그인하면 `_app.tsx`에 `getInitialProps` 부분에서 클라이언트가 node서버(next.js 서버)에 보낸 쿠키를 가지고 dispatch후 토큰만 `axiosInstance` defaults에 저장한다.
+* 토큰을 하위 컴포넌트에 props로 전달해주고, `Header.tsx` 컴포넌트는 _app에서 부터 전달된 토큰값을 가지고 로그인/비로그인 여부를 확인한다.
+* 로그인 이후 새로고침을 통해 들어오는 경우를 위해 Header컴포넌트에 `useEffect`부분에 추가적인 처리를 해준다. (토큰을 받고 사용자정보를 redux에 저장해 놓는 작업)
+
+
+### 문제점
+위에 방법이 깔끔하지 않지만 우선 위에 방식으로 처리를 했다. `_app.tsx`에 `getInitialProps` 부분에서 `dispatch`를 하고 redux 스토어에 유저정보나 토큰정보를 저장해 놓는다면 보다 처리가 편리하고
+`Header.tsx` 컴포넌트에서 로그인/비로그인 여부를 확인하는 작업도 편하겠지만 우리에 프로젝트는 `next.js`에서 `redux-saga`를 사용하기 위해 `next-redux-wrapper`를 사용하고 있다.
+문제는 next-redux-wrapper를 사용하면 `serverSideProps`를 적용하는 방식이 조금 다르다는 점이다.
+
+<br>
+
+```javascript
+export const getServerSideProps = wrapper.getServerSideProps((store) => async ({req, res, ...etc}: any) => {
+  try {
+    const {id} = etc.query
+    store.dispatch({
+      type: LOAD_MAGAZINE_DETAIL_REQUEST,
+      data: id
+    })
+
+    store.dispatch(END)
+    await store?.sagaTask?.toPromise()
+
+    return {
+      props: {
+        ...(await serverSideTranslations(etc.locale, ['common'], nextI18nextConfig))
+      }
+    }
+  } catch (e) {
+    return {props: {}}
+  }
+})
+export default Magazine
+```
+
+위 코드처럼 `getServerSideProps` 변수에 담긴 함수가 `context`라는 arguments를 받는경우가 일반적인데 콜백을 전달해 주어야 한다.
+
+```javscript
+Page.getInitialProps = wrapper.getInitialPageProps(store => ({pathname, req, res}) => {
+  console.log('2. Page.getInitialProps uses the store to dispatch things');
+  store.dispatch({
+    type: 'TICK',
+    payload: 'was set in error page ' + pathname,
+  });
+});
+```
+next-redux-wrapper 깃허브 설명에 보면 위 코드처럼 `Page.getInitialProps`를 `wrapper.getInitialPageProps`로 처리하면 된다고 하는데 실제로는 동작하지 않는다.
+현재 내가 사용하고 있는 next.js 버전은 12버전이다. 어느 인프런 강의에 질의응답 부분에는 실무에서 redux 버전을 최신으로 사용하지 않는다는 내용을 봤다.  
+프론트 개발을 할 때 npm 버전에 관한 이슈는 괴로운 부분인 것 같다.  
+
+내가 깊이가 없기 때문도 있겠지만 나같은 사람에게는 큰 고난인 것 같다.
+
+아무튼 결론은 _app.tsx의 getInitialProps에서 redux-saga를 쓰지 못한다는 것이다. [해당 내용에 대한 git issue](https://github.com/kirill-konshin/next-redux-wrapper/issues/455)
+
+<br>
+
+그래서 나의 경우에는 윗부분에 적었던 코드처럼 기본 `getInitialProps` 부분에 if로 분기를 해서 `axiosInstance`에 코드를 넣거나 props를 하위 컴포넌트에 내려줘서 로그인/비로그인 처리를 해주었던 것이다. 더 좋은 방법이 있으면 가여운 초보개발자에게 pull request 해주었으면 좋겠다.
+
+다음 프로젝트에서 또 내가 next.js를 맡거나 프론트 개발을 많이 담당하게 된다면 redux-saga 와 axios 보다는 다른 방식을 고민할 것 같다.
