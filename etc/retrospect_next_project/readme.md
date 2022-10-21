@@ -365,3 +365,26 @@ next-redux-wrapper 깃허브 설명에 보면 위 코드처럼 `Page.getInitialP
 그래서 나의 경우에는 윗부분에 적었던 코드처럼 기본 `getInitialProps` 부분에 if로 분기를 해서 `axiosInstance`에 코드를 넣거나 props를 하위 컴포넌트에 내려줘서 로그인/비로그인 처리를 해주었던 것이다. 더 좋은 방법이 있으면 가여운 초보개발자에게 pull request 해주었으면 좋겠다.
 
 다음 프로젝트에서 또 내가 next.js를 맡거나 프론트 개발을 많이 담당하게 된다면 redux-saga 와 axios 보다는 다른 방식을 고민할 것 같다.
+
+
+# Mysql - JSON_ARRAYAGG를 쓸 때 자주 하는 실수
+
+질문, 답변, 태그, 북마크를 모두 가져와 `GROP BY` 를 한 뒤 `JSON_ARRAYAGG` 를 통해 값을 배열로 만들어 주려고 했다.
+
+```mysql
+SELECT
+    q.question_id as id,
+    q.title,
+    q.content,
+    JSON_ARRAYAGG(qt.tag_name) AS tags
+FROM question q
+LEFT JOIN question_tag qt ON qt.question_id = q.question_id
+WHERE MATCH(title, content) AGAINST('many' in boolean mode) // 전문 검색
+GROUP BY q.question_id
+```
+
+위 코드처럼 쿼리를 실행하면 더미데이터가 잘 나온다.
+
+![mysql 결과](images/image03.png)
+
+# 작성중
