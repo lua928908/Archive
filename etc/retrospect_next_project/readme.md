@@ -387,4 +387,59 @@ GROUP BY q.question_id
 
 ![mysql 결과](images/image03.png)
 
-# 작성중
+<br>
+
+그런데
+```mysql
+SELECT
+    q.question_id as id,
+    q.title,
+    q.content,
+    JSON_ARRAYAGG(qt.tag_name) AS tags,
+    COUNT(b.bookmark_id) AS bookmarkCount
+FROM question q
+LEFT JOIN question_tag qt ON qt.question_id = q.question_id
+LEFT JOIN bookmark b ON b.book_id = q.question_id
+WHERE MATCH(title, content) AGAINST('many' in boolean mode)
+GROUP BY q.question_id
+```
+
+이런식으로 북마크를 갖다붙이면 결과가 이상하게 나온다
+
+![mysql 결과](images/image04.png)
+
+
+`LEFT JOIN`을 해서 N만큼 나온 테이블에 북마크를 붙이려고 다시 `LEFT JOIN` 을 하니까 M*N이 된 상태에서 다시 행이 곱해졌기 때문이다.  
+결과적으로 `WITH` 절에서 카운트,북마크를 만들어놓고 본문에서 `LEFT JOIN`으로 붙여서 `PK`와 `FK`가 같은 row만 가져온 다음 미리 준비해놓은 값을 그대로 가져다 써야 한다.
+
+```mysql
+WITH TAGS AS (
+    SELECT q.question_id, IF(COUNT(qt.id), JSON_ARRAYAGG(qt.tag_name), NULL) AS tags
+    FROM question AS q
+    LEFT JOIN question_tag qt ON qt.question_id = q.question_id
+    GROUP BY q.question_id
+),
+    BOOKMARKCOUNT AS (
+        SELECT q.question_id, COUNT(b.book_id) AS bookmarkCount
+        FROM question AS q
+        LEFT JOIN bookmark AS b ON b.book_id = q.question_id
+        GROUP BY b.book_id
+    )
+SELECT
+    q.question_id as id,
+    q.title,
+    q.content,
+    TAGS.tags,
+    BOOKMARKCOUNT.bookmarkCount
+FROM question q
+LEFT JOIN TAGS ON TAGS.question_id = q.question_id
+LEFT JOIN BOOKMARKCOUNT ON BOOKMARKCOUNT.question_id = q.question_id
+WHERE MATCH(title, content) AGAINST('many' in boolean mode)
+GROUP BY q.question_id;
+```
+위 코드처럼 `WITH` 절에서 컬럼을 준비해놓고 `PK`와 `FK` 예제에서는 question_id를 가지고 JOIN해서 필요한 필드를 가져와야 한다.  
+
+![mysql 결과](images/image05.png)
+
+`LEFT JOIN`으로 한번에 다 조인하면 row가 중복된다는게 생각해보면 쉬운내용이고 기초적인 부분인데 자꾸 위에 예시같은 오류에 빠질때가 있다.
+한번 겪고나면 `sub quersy` 혹은 `WITH`으로 해결해야 한다는 것을 알면서도 계속 까먹는다.
