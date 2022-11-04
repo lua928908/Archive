@@ -443,3 +443,194 @@ GROUP BY q.question_id;
 
 `LEFT JOIN`으로 한번에 다 조인하면 row가 중복된다는게 생각해보면 쉬운내용이고 기초적인 부분인데 자꾸 위에 예시같은 오류에 빠질때가 있다.
 한번 겪고나면 `sub quersy` 혹은 `WITH`으로 해결해야 한다는 것을 알면서도 계속 까먹는다.
+
+<br>
+
+---
+
+# FullPage 기능 만들기
+메인 페이지에서 스크롤 이벤트가 발생하면 section 단위로 페이지가 스크롤되는 기능이 필요했다.  
+딱 npm에 있는 [fullpage](https://www.npmjs.com/package/@fullpage/react-fullpage) 라이브러리 기능이였다.
+
+<br>
+
+사용 하려고 보니 License 부분이 `GPL-3.0` 으로 표기되어 있어 확인해보니 오픈소스나 오픈프로젝트에서 출처를 밝히고 사용하는 것은 가능하지만
+상업적으로 사용하는 경우 구매해야 한다.  
+
+그래서 해당 기능을 미루다가 직접 만들어 봤다.
+
+```javascript
+import * as React from 'react'
+import {useEffect, useRef, useState} from 'react'
+import {serverSideTranslations} from 'next-i18next/serverSideTranslations'
+import {NextPage} from 'next'
+import Head from 'next/head'
+import Image from 'next/image'
+import styled from 'styled-components'
+import Link from 'next/link'
+
+import nextI18NextConfig from '../next-i18next.config'
+import styles from '../styles/Home.module.css'
+
+const DotWrap = styled.div`
+  position: absolute;
+  top: 50%;
+  right: 50px;
+
+  .dot {
+    margin-top: 5px;
+    display: block;
+    border: 1px solid white;
+    border-radius: 50%;
+    width: 7px;
+    height: 7px;
+  }
+  .dot:first-child {
+    margin-top: 0;
+  }
+  .dot.active {
+    background-color: white;
+  }
+`
+const Dots = ({pageIndex, maxPageIndex}: any) => {
+  const [sectionArray, setSectionArray] = useState<any>([])
+
+  useEffect(() => {
+    const createArr = new Array(maxPageIndex).fill(undefined)
+
+    setSectionArray(createArr)
+  }, [maxPageIndex])
+
+  return (
+    <>
+      <DotWrap>
+        {sectionArray?.map((v: any, i: any) => {
+          return <div key={i} className={`dot ${i + 1 === pageIndex && 'active'}`} />
+        })}
+      </DotWrap>
+    </>
+  )
+}
+
+const Wrap = styled.div`
+  .section {
+    height: 100vh;
+  }
+
+  .outer {
+    height: 100vh;
+    overflow-y: hidden;
+  }
+
+  .outer::-webkit-scrollbar {
+    display: none;
+  }
+
+  .inner {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 100px;
+  }
+`
+
+const Home: NextPage = () => {
+  const outerDivRef = useRef<any>()
+  const [pageIndex, setPageIndex] = useState(1)
+  const [maxPageIndex, setMaxPageIndex] = useState<any>(null)
+
+  const pageUp = (currentPageIndex: number, pageHeight: number): void => {
+    const top = pageHeight * (currentPageIndex - 1) - pageHeight // pageIndex가 1일때 top은 0 이여야 하므로 pageHeight를 빼줌
+    outerDivRef.current.scrollTo({
+      top,
+      left: 0,
+      behavior: 'smooth'
+    })
+    const changePageIndex = currentPageIndex - 1
+    setPageIndex(changePageIndex)
+  }
+
+  const pageDown = (currentPageIndex: number, pageHeight: number): void => {
+    const top = pageHeight * currentPageIndex
+    outerDivRef.current.scrollTo({
+      top,
+      left: 0,
+      behavior: 'smooth'
+    })
+    const changePageIndex = currentPageIndex + 1
+    setPageIndex(changePageIndex)
+  }
+
+  useEffect(() => {
+    const length = document.querySelectorAll('.section').length
+    setMaxPageIndex(length)
+  }, [])
+
+  const wheelHandler = (e: React.WheelEvent) => {
+    const {deltaY} = e
+    const {scrollTop} = outerDivRef.current
+    const pageHeight = window.innerHeight
+
+    if (deltaY > 0) {
+      // 스크롤 내릴 때
+      if (pageIndex < maxPageIndex) pageDown(pageIndex, pageHeight)
+    } else {
+      // 스크롤 올릴 때
+      if (pageIndex > 1) pageUp(pageIndex, pageHeight)
+    }
+  }
+  const debounce: Function = (func: Function, timeout = 300) => {
+    let timer: any
+    return (...args: any) => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        func.apply(this, args)
+      }, timeout)
+    }
+  }
+  const movePage = debounce((e: React.WheelEvent) => wheelHandler(e), 350)
+  
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    const outerDivRefCurrent = outerDivRef.current
+    outerDivRefCurrent.addEventListener('wheel', movePage)
+
+    return () => {
+      document.body.style.overflow = 'visible'
+      outerDivRefCurrent.removeEventListener('wheel', movePage)
+    }
+  }, [pageIndex, maxPageIndex])
+
+  return (
+    <>
+      <Wrap>
+        <Head><title>HOME</title></Head>
+        <div id="fullpage">
+          <div ref={outerDivRef} className="outer">
+            <section id="section0" className="section"></section>
+
+            <section id="section1" className="section"></section>
+
+            <section id="section2" className="section"></section>
+
+            <section id="section4" className="section"></section>
+
+            <Dots pageIndex={pageIndex} maxPageIndex={maxPageIndex} />
+          </div>
+        </div>
+      </Wrap>
+    </>
+  )
+}
+
+export async function getServerSideProps({locale}: any) {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale, ['common'], nextI18NextConfig))
+    }
+  }
+}
+
+export default Home
+```
