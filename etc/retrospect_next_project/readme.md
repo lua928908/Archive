@@ -634,3 +634,69 @@ export async function getServerSideProps({locale}: any) {
 
 export default Home
 ```
+
+---
+
+# 커밋할 때 hook으로 eslint/typescript 체크하기
+
+여러 개발자가 같이 개발하는 환경에서 코드 스타일을 맞추기 위해 eslint를 사용한다.  
+현재 회사에서는 `git action`과 `serverless`를 통해 배포하는데 로컬에서 깃으로 커밋한 이후
+`git action`이 빌드를 하는 과정에서 에러가 발생하는 경우가 많았다. 그래서 `eslint`, `prettier`, `check-types`를 적용했는데
+
+커밋 이후 동작해야 할 hook이 작동하지 않고 그냥 커밋이 되는 오류가 있었다.
+
+<br>
+
+```json
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "{components,pages,reducers,sagas}/**/*.{js,jsx,ts,tsx}": [
+      "npm run lint",
+      "prettier --write .",
+      "git add"
+    ],
+    "{src,test}/**/*.{yaml,yml}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+```
+
+`package.json`의 일부다 git commit을 하려고 하면 커밋을 실행하기 전 `husky`가 `lint-staged`를 실행한다.
+그럼 `npm run lint`를 실행하는데  `"lint": "npm run eslint && npm run check-types",` 이러한 동작을 수행한다.  
+
+<br>
+
+```json
+"scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "eslint": "eslint --fix .",
+    "check-types": "bash -c tsc --noemit",
+    "lint": "npm run eslint && npm run check-types",
+    "deploy": "serverless"
+},
+```
+원래 `check-types` 부분을 `tsc --noemit`로만 실행하다가 `bash -c tsc --noemit`으로 변경한 것이다 이상하게 로컬에서 실행할 때에는 문제가 되지 않았는데
+깃 액션에서는 실패해서 찾아보니 bash로 실행하는 것을 명시하라는 내용이 있었다.
+
+<br>
+
+그런데 이렇게 전부 설정을 해도 깃 커밋을 할 때 `husky`의 `pre-commit hook`이 제대로 동작하지 않는 경우가 있다.
+
+그렇다면 [이 글](https://stackoverflow.com/questions/50048717/lint-staged-not-running-on-precommit)을 확인해보자  
+`husky`를 4 버전으로 사용해야 하는 것 같다.
+```bash
+
+npm uninstall husky
+npm install -D husky@4
+npm install -D husky
+
+git config --unset core.hookspath
+```
+그럼 이제 실행될 것이다.
