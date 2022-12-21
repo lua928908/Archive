@@ -700,3 +700,91 @@ npm install -D husky
 git config --unset core.hookspath
 ```
 그럼 이제 실행될 것이다.
+
+<br>
+
+---
+
+<br>
+
+# next-i18next, components에서 다국어 처리 사용하기다구
+
+우리가 개발중인 사이트는 다국어처리를 위해 `next-i18next`를 사용하고 있다.
+
+```javscript
+import {NextPage} from 'next'
+import {serverSideTranslations} from 'next-i18next/serverSideTranslations'
+import React, {useEffect, useState} from 'react'
+import {useDispatch, useSelector} from 'react-redux'
+import {useTranslation} from 'next-i18next'
+
+import nextI18nextConfig from '../../next-i18next.config'
+
+const Main = ({magazineItem}: any) => {
+  const {t} = useTranslation('main')
+  return (
+    <div>
+      {t('youre key')}
+    </div>
+  )
+}
+
+export const getServerSideProps = wrapper.getServerSideProps((store) => async ({req, res, ...etc}: any) => {
+  try {
+    return {
+      props: {
+        ...(await serverSideTranslations(etc.locale, ['main'], nextI18nextConfig))
+      }
+    }
+  } catch (e) {
+    return {props: {}}
+  }
+})
+
+export default Main
+
+```
+
+위 코드처럼 `getServerSideProps`안에서 `serverSideTranslations`를 통해 다국어 번역을 처리하기 위한 객체를 가져올 수 있고, hook 안에서 `json`파일에 적어놓은 `key`를 통해 원하는 값을 가져올 수 있다. 그런데 문제는 SSR(getServerSideProps 혹은 getStaticProps 등)을 사용할 수 없는 일반 components에서는 어떻게 사용해야 하는가 이다.
+
+깃 이슈에서도 찾아보고 스택오버플로우에서 검색도 해봤지만 내가 원하는 내용은 딱히 보이지 않았다. 결과적으로 단순하게 처리가 가능했다.
+
+```javascript
+export const getServerSideProps = wrapper.getServerSideProps((store) => async ({req, res, ...etc}: any) => {
+  try {
+    return {
+      props: {
+        ...(await serverSideTranslations(etc.locale, ['common', 'main'], nextI18nextConfig))
+      }
+    }
+  } catch (e) {
+    return {props: {}}
+  }
+})
+```
+
+`/pages` 디렉토리 하위에 있는 모든 page에 `common.json` 파일도 가져올 수 있도록 배열에 추가해주고 `footer` 컴포넌트는 `common`을 가져와서 사용하게 해주는 것으로 처리했다.
+
+```javascript
+import * as React from 'react'
+import {useTranslation} from 'next-i18next'
+
+const Footer = (props: any) => {
+  const {t, i18n, ready} = useTranslation('common')
+  const [hydrated, setHydrated] = React.useState(false)
+
+  if (!ready || !hydrated) {
+    // Returns null on first render, so the client and server match
+    return null
+  }
+
+  return (
+    <div>
+      {t('terms_and_conditions')}
+    </div>
+  )
+}
+
+export default Footer
+```
+위 코드는 `/compoents/Footer.tsx` 의 코드 이다. `components`가 SSR이 없어서 그런지 `hydrated` 관련 오류가 나서 추가한 if문이다. `Main.tsx` 페이지에서 사용되는 `Footer.tsx` 컴포넌트기 때문에 `Main`페이지는 `common.json`와 `main.json` 파일을 모두 가져오고 `Footer.tsx` 컴포넌트에서는 `common.json`의 내용만 `useTranslation`로 사용하는 것이다.
