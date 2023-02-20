@@ -788,3 +788,41 @@ const Footer = (props: any) => {
 export default Footer
 ```
 위 코드는 `/compoents/Footer.tsx` 의 코드 이다. `components`가 SSR이 없어서 그런지 `hydrated` 관련 오류가 나서 추가한 if문이다. `Main.tsx` 페이지에서 사용되는 `Footer.tsx` 컴포넌트기 때문에 `Main`페이지는 `common.json`와 `main.json` 파일을 모두 가져오고 `Footer.tsx` 컴포넌트에서는 `common.json`의 내용만 `useTranslation`로 사용하는 것이다.
+
+<br>
+
+---
+
+# Cookie, Sub Domain 설정하기
+
+## 문제점
+next.js 어플리케이션에서 서버로 접근하는 도메인이 2가지로 분리되어 있다. (front.example.com, m.example.com). 
+모바일 버전을 만들지 말고 반응형 웹으로 작업하는 것이 적절하다고 생각 하지만 결과적으로 우리는 현재 pc사용자와 mobile 사용자를 위한 도메인이 별개로 나뉘어져 있다.  
+백엔드에서도 cookie를 제공 할 때 처음에는 `cookie.setDomain("https://*.example.com")`으로 설정했다가 제대로 동작하지 않자 `.example.com`으로 작성하는 것이 올바르 다는 것을 알았다. 그런데 `.example.com` 으로 코드를 변경해도 에러가 발생 한다.
+
+![쿠키 도메인으로 인해 500에러 발생](images/image06.png)
+
+즉, `["front.example.com", "m.example.com"]` 쿠키에 여러개의 도메인을 처리하기 위한 `.example.com`가 정상적으로 동작하지 않는다.
+
+<br>
+
+## 해결법
+![쿠키 도메인으로 인해 500에러 발생](images/image07.png)
+[출처](https://velog.io/@jh5253/%ED%86%B0%EC%BA%A3Tomcat%EC%9D%98-%EC%BF%A0%ED%82%A4-%ED%94%84%EB%A1%9C%EC%84%B8%EC%84%9C)
+
+위 이미지를 보자 톰캣 8.0과 8.5는 서로 쿠키프로세서가 다르다.
+
+우리는 `tomcat-embed-core-9.0.70` 버전을 사용하고 있기 때문에 도메인명의 첫 글자로 `.`을 허용하지 않는다.  
+LegacyCookieProcessor로 변경이 필요하다.
+
+```java
+@Configuration
+public class TomcatConfig implements WebServerFactoryCustomizer<TomcatServletWebServerFactory>{
+
+    @Override
+    public void customize(TomcatServletWebServerFactory factory) {
+        factory.addContextCustomizers(context -> context.setCookieProcessor(new LegacyCookieProcessor()));
+    }
+}
+```
+이렇게 변경한 후 다시 배포해 보면 정상적으로 동작하게 된다.
