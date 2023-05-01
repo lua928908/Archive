@@ -17,6 +17,7 @@
 - [타입스크립트 배우기](https://github.com/lua928908/Archive/tree/master/backend/typescript)
 - [자바 Optional 공부하기](https://github.com/lua928908/Archive/tree/master/backend/optional/01)
 - [이직후 자바 벼락치기](https://github.com/lua928908/Archive/tree/master/backend/java_practice)
+- [혼자 공부하며 JAVA 기록하기](https://github.com/lua928908/Archive/tree/master/backend/java_study_record)
 
 # Front
 - [async/await 공부하기](https://github.com/lua928908/Archive/tree/master/front/async_await/01)
