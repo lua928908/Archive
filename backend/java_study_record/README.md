@@ -478,6 +478,242 @@ class ProxyThumbnail implements Thumbnail {
 }
 ```
 
+## Decorator 패턴
+특정 클래스의 객체들이 할 수 있는 일을 여러가지 두고 각 객체마다 원하는대로 골라 실행시키거나 기능들을 필요에 따라 추가/삭제 하고자 할 때 사용되는 패턴이다.
+종스크롤 슈팅게임을 보면 전투기가 아이템을 먹었거나 레벨업을 할 때 무기의 발사체가 추가 되는데 decorator 패턴이다.
+
+DecoratorPattern.java
+```java
+public class DecoratorPattern {
+  public static void main(String[] args) {
+
+    new XWingFighter().attack();
+    // 탄환 발사
+
+    new LaserDecorator(new XWingFighter()).attack();
+    // 탄환 발사
+    // 레이저 발사
+
+    new PlasmaDecorator(
+      new MissileDecorator(
+        new LaserDecorator(
+          new XWingFighter()
+          ))).attack();
+    // 탄환 발사
+    // 레이저 발사
+    // 미사일 발사
+    // 플라즈마 발사
+  }
+}
+```
+
+Fighter.java
+```java
+public interface Fighter {
+  public void attack ();
+}
+```
+
+XWingFighter.java
+```java
+public class XWingFighter implements Fighter {
+  @Override
+  public void attack () {
+    System.out.println("탄환 발사");
+  }
+}
+```
+
+FighterDecorator.java
+```java
+public abstract class FighterDecorator implements Fighter {
+
+  private Fighter decoratedFighter;
+  public FighterDecorator(Fighter _decoratedFighter) {
+    decoratedFighter = _decoratedFighter;
+  }
+
+  @Override
+  public void attack () {
+    decoratedFighter.attack();
+  }
+}
+```
+
+LaserDecorator.java
+```java
+public class LaserDecorator extends FighterDecorator {
+  public LaserDecorator (Fighter _decoratedFighter) {
+    super(_decoratedFighter);
+  }
+  @Override
+  public void attack () {
+    super.attack();
+    System.out.println("레이저 발사");
+  }
+}
+```
+
+MissileDecorator.java
+```java
+public class MissileDecorator extends FighterDecorator {
+  public MissileDecorator (Fighter _decoratedFighter) {
+    super(_decoratedFighter);
+  }
+  @Override
+  public void attack () {
+    super.attack();
+    System.out.println("미사일 발사");
+  }
+}
+```
+
+PlasmaDecorator.java
+```java
+public class PlasmaDecorator extends FighterDecorator {
+  public PlasmaDecorator (Fighter _decoratedFighter) {
+    super(_decoratedFighter);
+  }
+  @Override
+  public void attack () {
+    super.attack();
+    System.out.println("플라즈마 발사");
+  }
+}
+```
+
+위 코드를 보면 데코레이터 객체에 생성자로 figher 객체를 넣어 무기를 추가할 수 있다.
+그런데 이런식의 사용은 전체 코드를 모르는 개발자 입장에서는 사용법이 불편할 수 있다. 팩토리 패턴을 적용해 보다 사용을 편리하게 할 수도 있다.
+
+FighterFactory.java
+```java
+public class FighterFactory {
+  public Fighter getFighter(boolean laser, boolean missile, boolean plasma) {
+    Fighter fighter = new XWingFighter();
+
+    if (laser) fighter = new LaserDecorator(fighter);
+    if (missile) fighter = new MissileDecorator(fighter);
+    if (plasma) fighter = new PlasmaDecorator(fighter);
+
+    return fighter;
+  }
+}
+```
+
+FactoryDecorator.java
+```java
+public class FactoryDecorator {
+  public static void main(String[] args) {
+    FighterFactory factory = new FighterFactory();
+    
+    factory.getFighter(false, false, false).attack();
+    // 탄환 발사
+
+    factory.getFighter(true, false, true).attack();
+    // 탄환 발사
+    // 레이저 발사
+    // 플라즈마 발사
+
+    factory.getFighter(true, true, false).attack();
+    // 탄환 발사
+    // 레이저 발사
+    // 미사일 발사
+
+    factory.getFighter(true, true, true).attack();
+    // 탄환 발사
+    // 레이저 발사
+    // 미사일 발사
+    // 플라즈마 발사
+  }
+}
+```
+
+## Factory method 패턴
+
+어떠한 객체를 생성하는 지점이 여러 곳에 있다면 관리가 어려워 진다.
+생성자 변경될때 일일이 수정해주어야 하는 번거로움이 있다. 객체를 생성하는 코드가 많을수록
+생성자를 변경하거나 사용되는 객체 자체를 수정하기 부담스러워 진다. 이 역할을 팩토리 클래스가 대신한다면
+팩토리 메서드만 관리해 주면 되고, 조건에 따라 객체를 생성하는 일을 팩토리 클래스에 위임하면 객체만 생성해서 사용하는
+입장에서는 구체적으로 어떻게 객체가 생성되는지 영역을 몰라도 되는 장점이 있다.
+`antd` 혹은 `bootstrap`에서 컴포넌트를 생성할때 사용되는 패턴도 팩토리 메서드 패턴이 아닐까 싶다.
+
+FactoryMethod.java
+```java
+class FactoryMethod {
+
+    public static void main(String[] args) {
+        new Console().withoutFactory();
+        new Console().withFactory();
+    }
+}
+```
+
+Component.java
+```java
+abstract class Component {
+  protected abstract String getCompName ();
+  public Component () {
+    System.out.println(this.getCompName() + " 생성");
+  }
+}
+
+class Button extends Component {
+  @Override
+  protected String getCompName() { return "버튼"; }
+}
+class Switch extends Component {
+  @Override
+  protected String getCompName() { return "스위치"; }
+}
+class Dropdown extends Component {
+  @Override
+  protected String getCompName() { return "드랍다운"; }
+}
+```
+
+CompFactory.java
+```java
+class CompFactory {
+  public Component getComp (Usage usage) {
+    if (usage == Usage.PRESS) {
+      return new Button();
+    } else if (usage == Usage.TOGGLE) {
+      return new Switch();
+    } else {
+      return new Dropdown();
+    }
+  }
+}
+```
+
+Console.java
+```java
+class Console {
+
+  private CompFactory compFactory = new CompFactory();
+
+  Component comp1;
+  Component comp2;
+  Component comp3;
+
+  void withoutFactory () {
+    comp1 = new Button();
+    comp2 = new Switch();
+    comp3 = new Dropdown();
+  }
+
+  void withFactory () {
+    comp1 = compFactory.getComp(Usage.PRESS);
+    comp2 = compFactory.getComp(Usage.TOGGLE);
+    comp3 = compFactory.getComp(Usage.EXPAND);
+  }
+}
+
+enum Usage {
+  PRESS, TOGGLE, EXPAND
+}
+```
+
 #### 출처
 * [얄코 사이트](https://www.yalco.kr/29_oodp_1/)
 * [얄코 유튜브 강의](https://www.youtube.com/watch?v=lJES5TQTTWE)
