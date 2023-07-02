@@ -69,7 +69,7 @@ docker-machine create --driver virtualbox default
 | `docker create -p 80:80 --name nx nginx`  | nginx라는 이미지를 nx라는 이름의 컨테이너로 생성한다. |
 | `docker start`  | 도커 컨테이너를 실행한다, 생성하는것과는 다르다. |
 | `docker run example` | 이미지를 찾아 컨테이너로 만들고 실행까지 수행한다. (이미지 없으면 도커허브에서 풀링) |
-| `docker stop \`docker ps -q\` ` | docker ps -q를 하면 실행중인 컨테이너의 id를 가져오는데 이걸 stop으로 전달해서 모두 중지시키는 명령어이다. |
+| `docker stop (\`docker ps -q\`)` | docker ps -q를 하면 실행중인 컨테이너의 id를 가져오는데 이걸 stop으로 전달해서 모두 중지시키는 명령어이다. |
 | `docker container run <docker-image-name> <command>` | 도커 컨테이너를 실행한다. 위 커맨드와 의미적으로 동일하다.(아마도) [참고](https://okky.kr/article/735452?note=2016019)  |
 | `docker commit ` | 현 컨테이너의 이미지를 그대로 저장한다, 예를들어 ubuntu를 설치하고 docker,aws-cli,git 등등을 설치한뒤 필요한 어플리케이션이 설치된 이미지의 상태를 commit해서 다시 저장할 수 있다. |
 | `docker ps` | 현재 실행중인 컨테이너 리스트를 확인할 수 있다. |
