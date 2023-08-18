@@ -5,7 +5,7 @@
 * 이직 후 스프링부트, JPA를 주 스택으로 사용하게 되었다
 * 공부한 내용을 기록하자
 * 혼자 복습을 위한 아카이브 용도가 주 목적이기에 모호한 설명이나 용어 사용이 있다
-* 갓영한님의 강의는 늘 [구매](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%ED%95%B5%EC%8B%AC-%EC%9B%90%EB%A6%AC-%EA%B8%B0%EB%B3%B8%ED%8E%B8)하자
+* 김영한님의 강의는 늘 [구매](https://www.inflearn.com/course/%EC%8A%A4%ED%94%84%EB%A7%81-%ED%95%B5%EC%8B%AC-%EC%9B%90%EB%A6%AC-%EA%B8%B0%EB%B3%B8%ED%8E%B8)하자
 
 <br>
 
@@ -96,10 +96,8 @@ public class SpringConfig {
 바꿀 수 있다.
 
 
-
-
-중국,한국을 제외하면 글로벌에서 myBatis 보다 JPA를 훨씬 많이 쓰는데 국내에서만 유독 안쓰더라, 이유를 생각해보니 책이 없어서 기술 보급이 어려울 것 같았고 토비의 스프링에 저자 이일민이 추천을 해줘서
-2년 동안 저녁시간마다 책을 집필해서 2015년에 JPA책을 냈다고 함 애정이 존나 지리는 듯
+중국,한국을 제외하면 글로벌에서 myBatis 보다 JPA를 훨씬 많이 쓰는데 국내에서만 유독 사용 하지 않음, 이유를 생각해보니 책이 없어서 기술 보급이 어려울 것 같았고 토비의 스프링에 저자 이일민이 추천을 해줘서
+2년 동안 저녁시간마다 책을 집필해서 2015년에 JPA책을 냈다고 함 애정이 큰 것 같다.
 
 JPA를 사용할 때에는 항상 @Transaction을 사용해줘야 한다
 jpa는 모두 EntityManager 를 통해 관리 된다.
@@ -125,8 +123,6 @@ public class JpaMemberRepository implements MemberRepository{
     ... 이하 생략 
 }
 ```
-
-
 
 JPA를 먼저 학습한 다음 spring-data-jpa를 학습해야 한다
 spring-data-jpa는 JPA를 편하게 사용할 수 있도록 도와주는 도구일 뿐이다
@@ -183,8 +179,6 @@ public class TimeTraceAop {
 
 
 
-
-
 ---
 
 
@@ -234,7 +228,7 @@ class RateDiscountPolicyTest {
 3. 주문서비스가 로직을 수행
 4. 이때 로직중 할인정책에 대한 로직은 중요하고 바뀔 여지가 있기 때문에 별도로 분리해서 개발한다면 orderService는 discountPolicy를 주입받아 사용해 한다. 즉 의존관계를 맺게 된다.
 5. discountPolicy의 구현체가 바뀌면 코드상에서도 주입받는 부분 discountPolicy = new FixedDiscountPolicy() 부분을 수정해야 햔다.
-6. 이 행위 자체가 DIP 위반이고 객체지향적인 개발이 아닌 것이다 생각해보면 요구사항이 바뀌면 당연히 어느부분 에서는 코드가 변해야 하지 않는가?
+6. 이 행위 자체가 DIP 위반이고 객체지향적인 개발이 아닌 것, 생각해보면 요구사항이 바뀌면 당연히 어느부분 에서는 코드가 변해야 하지 않는가?
 7. 이런 여러가지 문제를 해결하는 방법이 스프링에서는 의존성을 주입받는 것이다 즉, IOC 컨테이너나 bean 같은 것들 말이다.
 
 
